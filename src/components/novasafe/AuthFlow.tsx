@@ -590,12 +590,12 @@ function SignupScreen({
             <Sparkles className="h-3.5 w-3.5" /> Generate a secure passphrase
           </button>
 
-          <PrimaryButton disabled={strength < 3 || breached}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+          <PrimaryButton loading={s1Loading} disabled={strength < 3 || breached}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
         </form>
       )}
 
       {step === 2 && (
-        <form onSubmit={(e) => { e.preventDefault(); go("otp"); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); if (s2Loading) return; setS2Loading(true); setTimeout(() => go("otp"), 850); }} className="space-y-4">
           <Field label="Company or team (optional)">
             <Input placeholder="NovaSafe Inc." value={company} onChange={(e) => setCompany(e.target.value)} />
           </Field>
@@ -612,7 +612,7 @@ function SignupScreen({
             <ShieldCheck className="h-4 w-4 text-success mt-0.5 shrink-0" />
             We never see your master password or vault contents. Encryption happens on your device.
           </div>
-          <PrimaryButton>Create vault & verify email</PrimaryButton>
+          <PrimaryButton loading={s2Loading}>Create vault & verify email</PrimaryButton>
         </form>
       )}
     </Section>
@@ -686,9 +686,9 @@ function RecoveryKitScreen({ go }: { go: (s: Step) => void }) {
           <Download className="h-4 w-4" /> Download recovery kit
         </PrimaryButton>
       ) : (
-        <PrimaryButton onClick={() => go("recoveryConfirm")}>
+        <NavButton next="recoveryConfirm" go={go}>
           I've saved it · Continue <ArrowRight className="h-4 w-4" />
-        </PrimaryButton>
+        </NavButton>
       )}
       <button onClick={() => go("recoveryConfirm")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
         Skip for now (not recommended)
@@ -755,9 +755,9 @@ function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
 
       <div className="flex gap-2">
         <button onClick={() => setPicks({})} className="px-4 h-11 rounded-[10px] border border-border bg-card text-[13px] font-medium hover:bg-secondary transition-colors">Reset</button>
-        <PrimaryButton disabled={!allCorrect} onClick={() => go("biometric")}>
+        <NavButton next="biometric" go={go} disabled={!allCorrect}>
           {allCorrect ? <><Check className="h-4 w-4" /> Confirmed</> : "Confirm phrase"}
-        </PrimaryButton>
+        </NavButton>
       </div>
     </Section>
   );
@@ -796,7 +796,7 @@ function BiometricScreen({ go }: { go: (s: Step) => void }) {
           {scanning ? "Scanning…" : <><ScanFace className="h-4 w-4" /> Enable Face ID</>}
         </PrimaryButton>
       ) : (
-        <PrimaryButton onClick={() => go("device")}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+        <NavButton next="device" go={go}>Continue <ArrowRight className="h-4 w-4" /></NavButton>
       )}
       <button onClick={() => go("device")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
         Skip — set up later
@@ -862,7 +862,7 @@ function DeviceScreen({ go }: { go: (s: Step) => void }) {
         </button>
       </label>
 
-      <PrimaryButton onClick={() => go("workspace")}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+      <NavButton next="workspace" go={go}>Continue <ArrowRight className="h-4 w-4" /></NavButton>
     </Section>
   );
 }
@@ -949,7 +949,7 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
       </div>
 
       <div>
-        <PrimaryButton onClick={() => go("welcome")}>Send invites & finish</PrimaryButton>
+        <NavButton next="welcome" go={go}>Send invites & finish</NavButton>
         <button onClick={() => go("welcome")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
           Skip — I'll invite later
         </button>
@@ -987,9 +987,9 @@ function WelcomeScreen({ name, go }: { name: string; go: (s: Step) => void }) {
         </div>
 
         <div className="mt-6 w-full">
-          <PrimaryButton onClick={() => go("login")}>
+          <NavButton next="login" go={go}>
             <Sparkles className="h-4 w-4" /> Open my vault
-          </PrimaryButton>
+          </NavButton>
           <button onClick={() => go("login")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
             Take the 60-second tour
           </button>
