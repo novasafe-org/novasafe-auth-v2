@@ -942,6 +942,7 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
 /* ----------------- Welcome ----------------- */
 
 function WelcomeScreen({ name, go }: { name: string; go: (s: Step) => void }) {
+  const { loading, run } = useAsync();
   return (
     <Section>
       <div className="flex flex-col items-center text-center">
@@ -968,8 +969,8 @@ function WelcomeScreen({ name, go }: { name: string; go: (s: Step) => void }) {
         </div>
 
         <div className="mt-6 w-full">
-          <PrimaryButton onClick={() => go("login")}>
-            <Sparkles className="h-4 w-4" /> Open my vault
+          <PrimaryButton loading={loading} onClick={() => run(() => go("login"), 800)}>
+            {loading ? "Opening vault…" : <><Sparkles className="h-4 w-4" /> Open my vault</>}
           </PrimaryButton>
           <button onClick={() => go("login")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
             Take the 60-second tour
