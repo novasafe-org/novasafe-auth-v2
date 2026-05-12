@@ -332,6 +332,7 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
   const refs = useRef<Array<HTMLInputElement | null>>([]);
   const [timer, setTimer] = useState(30);
   const [verified, setVerified] = useState(false);
+  const { loading, run } = useAsync();
 
   useEffect(() => {
     if (timer <= 0) return;
@@ -392,8 +393,12 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
         )}
       </div>
 
-      <PrimaryButton onClick={() => go("recoveryKit")} disabled={!code.every((c) => c)}>
-        {verified ? <><Check className="h-4 w-4" /> Verified</> : "Verify & continue"}
+      <PrimaryButton
+        loading={loading}
+        onClick={() => run(() => { setVerified(true); setTimeout(() => go("recoveryKit"), 400); }, 900)}
+        disabled={!code.every((c) => c)}
+      >
+        {verified ? <><Check className="h-4 w-4" /> Verified</> : loading ? "Verifying…" : "Verify & continue"}
       </PrimaryButton>
     </Section>
   );
