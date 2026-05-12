@@ -426,9 +426,9 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
         )}
       </div>
 
-      <PrimaryButton onClick={() => go("recoveryKit")} disabled={!code.every((c) => c)}>
+      <NavButton next="recoveryKit" go={go} disabled={!code.every((c) => c)}>
         {verified ? <><Check className="h-4 w-4" /> Verified</> : "Verify & continue"}
-      </PrimaryButton>
+      </NavButton>
     </Section>
   );
 }
@@ -491,7 +491,7 @@ function ResetSuccess({ go }: { go: (s: Step) => void }) {
         </div>
         <Title eyebrow="Reset complete" title="You're all set" sub="Your master password has been securely updated. Sessions on other devices were signed out." />
         <div className="mt-6 w-full">
-          <PrimaryButton onClick={() => go("login")}>Continue to sign in</PrimaryButton>
+          <NavButton next="login" go={go}>Continue to sign in</NavButton>
         </div>
       </div>
     </Section>
@@ -511,6 +511,9 @@ function SignupScreen({
   const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
+  const [s0Loading, setS0Loading] = useState(false);
+  const [s1Loading, setS1Loading] = useState(false);
+  const [s2Loading, setS2Loading] = useState(false);
   const steps = ["Identity", "Security", "Workspace"];
 
   const strength = useMemo(() => {
@@ -540,19 +543,19 @@ function SignupScreen({
       </div>
 
       {step === 0 && (
-        <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); if (s0Loading) return; setS0Loading(true); setTimeout(() => { setS0Loading(false); setStep(1); }, 600); }} className="space-y-4">
           <Field label="Full name">
             <Input required placeholder="Ada Lovelace" value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
           <Field label="Email">
             <Input type="email" required placeholder="ada@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
-          <PrimaryButton>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+          <PrimaryButton loading={s0Loading}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
         </form>
       )}
 
       {step === 1 && (
-        <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); if (s1Loading) return; setS1Loading(true); setTimeout(() => { setS1Loading(false); setStep(2); }, 700); }} className="space-y-4">
           <Field label="Master password" hint={<span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" /> AI-evaluated</span>}>
             <div className="relative">
               <Input type={show ? "text" : "password"} required minLength={8} placeholder="At least 12 characters" value={pwd} onChange={(e) => setPwd(e.target.value)} className="pr-10" />
