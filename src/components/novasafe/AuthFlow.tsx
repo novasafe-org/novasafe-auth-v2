@@ -483,6 +483,7 @@ function SignupScreen({
   const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
   const steps = ["Identity", "Security", "Workspace"];
+  const { loading, run } = useAsync();
 
   const strength = useMemo(() => {
     let s = 0;
@@ -511,19 +512,19 @@ function SignupScreen({
       </div>
 
       {step === 0 && (
-        <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); run(() => setStep(1), 600); }} className="space-y-4">
           <Field label="Full name">
             <Input required placeholder="Ada Lovelace" value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
           <Field label="Email">
             <Input type="email" required placeholder="ada@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
-          <PrimaryButton>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+          <PrimaryButton loading={loading}>{loading ? "Checking…" : <>Continue <ArrowRight className="h-4 w-4" /></>}</PrimaryButton>
         </form>
       )}
 
       {step === 1 && (
-        <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); run(() => setStep(2), 700); }} className="space-y-4">
           <Field label="Master password" hint={<span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" /> AI-evaluated</span>}>
             <div className="relative">
               <Input type={show ? "text" : "password"} required minLength={8} placeholder="At least 12 characters" value={pwd} onChange={(e) => setPwd(e.target.value)} className="pr-10" />
@@ -558,12 +559,14 @@ function SignupScreen({
             <Sparkles className="h-3.5 w-3.5" /> Generate a secure passphrase
           </button>
 
-          <PrimaryButton disabled={strength < 3 || breached}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+          <PrimaryButton loading={loading} disabled={strength < 3 || breached}>
+            {loading ? "Securing password…" : <>Continue <ArrowRight className="h-4 w-4" /></>}
+          </PrimaryButton>
         </form>
       )}
 
       {step === 2 && (
-        <form onSubmit={(e) => { e.preventDefault(); go("otp"); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); run(() => go("otp"), 1100); }} className="space-y-4">
           <Field label="Company or team (optional)">
             <Input placeholder="NovaSafe Inc." value={company} onChange={(e) => setCompany(e.target.value)} />
           </Field>
@@ -580,7 +583,7 @@ function SignupScreen({
             <ShieldCheck className="h-4 w-4 text-success mt-0.5 shrink-0" />
             We never see your master password or vault contents. Encryption happens on your device.
           </div>
-          <PrimaryButton>Create vault & verify email</PrimaryButton>
+          <PrimaryButton loading={loading}>{loading ? "Creating vault…" : "Create vault & verify email"}</PrimaryButton>
         </form>
       )}
     </Section>
