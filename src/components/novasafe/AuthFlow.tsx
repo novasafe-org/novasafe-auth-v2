@@ -451,6 +451,7 @@ function RecoveryOption({ icon: Icon, title, desc, active, onClick }: { icon: Re
 }
 
 function ResetSuccess({ go }: { go: (s: Step) => void }) {
+  const { loading, run } = useAsync();
   return (
     <Section>
       <div className="flex flex-col items-center text-center pt-4">
@@ -462,7 +463,9 @@ function ResetSuccess({ go }: { go: (s: Step) => void }) {
         </div>
         <Title eyebrow="Reset complete" title="You're all set" sub="Your master password has been securely updated. Sessions on other devices were signed out." />
         <div className="mt-6 w-full">
-          <PrimaryButton onClick={() => go("login")}>Continue to sign in</PrimaryButton>
+          <PrimaryButton loading={loading} onClick={() => run(() => go("login"), 600)}>
+            {loading ? "Redirecting…" : "Continue to sign in"}
+          </PrimaryButton>
         </div>
       </div>
     </Section>
