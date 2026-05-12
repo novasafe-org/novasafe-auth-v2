@@ -153,15 +153,59 @@ function PrimaryButton({
     <button
       {...rest}
       disabled={loading || rest.disabled}
-      className={`anim-shine relative w-full h-11 rounded-[10px] bg-gradient-primary text-primary-foreground
-        font-medium text-[14px] shadow-cta transition-all
+      aria-busy={loading || undefined}
+      className={`relative w-full h-11 rounded-[10px] bg-gradient-primary text-primary-foreground
+        font-medium text-[14px] shadow-cta transition-all overflow-hidden
         hover:-translate-y-[1px] hover:shadow-lg active:translate-y-0
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
+        disabled:cursor-not-allowed disabled:hover:translate-y-0
+        ${loading ? "opacity-95" : "disabled:opacity-50"}
+        ${loading ? "" : "anim-shine"}
         inline-flex items-center justify-center gap-2 ${rest.className ?? ""}`}
     >
-      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-      {children}
+      {loading && (
+        <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[10px]">
+          <span
+            className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            style={{ animation: "nv-loading-sweep 1.2s linear infinite" }}
+          />
+        </span>
+      )}
+      <span
+        className={`relative inline-flex items-center justify-center gap-2 transition-all duration-300
+          ${loading ? "translate-y-[0.5px]" : ""}`}
+      >
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {children}
+      </span>
     </button>
+  );
+}
+
+/* Nav button: handles its own loading state for go(next) transitions */
+function NavButton({
+  next, go, ms = 650, disabled, children, className,
+}: {
+  next: Step;
+  go: (s: Step) => void;
+  ms?: number;
+  disabled?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  return (
+    <PrimaryButton
+      loading={loading}
+      disabled={disabled}
+      className={className}
+      onClick={() => {
+        if (loading) return;
+        setLoading(true);
+        setTimeout(() => go(next), ms);
+      }}
+    >
+      {children}
+    </PrimaryButton>
   );
 }
 
