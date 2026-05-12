@@ -38,8 +38,8 @@ export function AuthFlow() {
 
   return (
     <div className="min-h-screen w-full bg-background">
-      <div className="mx-auto max-w-[1440px] p-3 md:p-5 lg:p-6">
-        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-5 h-[calc(100vh-1.5rem)] md:h-[calc(100vh-2.5rem)] lg:h-[calc(100vh-3rem)]">
+      <div className="w-full p-3 md:p-5 lg:p-6">
+        <div className="grid lg:grid-cols-2 gap-5 h-[calc(100vh-1.5rem)] md:h-[calc(100vh-2.5rem)] lg:h-[calc(100vh-3rem)]">
           {/* Left editorial */}
           <div className="hidden lg:block">
             <EditorialPanel headline={COPY[step].headline} kicker={COPY[step].kicker} />
