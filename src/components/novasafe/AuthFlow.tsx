@@ -683,6 +683,7 @@ const PHRASE = ["sapphire", "orbit", "falcon", "lunar", "harbor", "matrix", "pix
 function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
   const challenge = [3, 7, 10];
   const [picks, setPicks] = useState<Record<number, string>>({});
+  const { loading, run } = useAsync();
   const options = useMemo(() => {
     const opts = [...challenge.map((i) => PHRASE[i]), "vector", "shadow", "circuit"];
     return opts.sort(() => 0.5 - Math.random());
@@ -726,8 +727,8 @@ function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
 
       <div className="flex gap-2">
         <button onClick={() => setPicks({})} className="px-4 h-11 rounded-[10px] border border-border bg-card text-[13px] font-medium hover:bg-secondary transition-colors">Reset</button>
-        <PrimaryButton disabled={!allCorrect} onClick={() => go("biometric")}>
-          {allCorrect ? <><Check className="h-4 w-4" /> Confirmed</> : "Confirm phrase"}
+        <PrimaryButton loading={loading} disabled={!allCorrect} onClick={() => run(() => go("biometric"), 700)}>
+          {loading ? "Confirming…" : allCorrect ? <><Check className="h-4 w-4" /> Confirmed</> : "Confirm phrase"}
         </PrimaryButton>
       </div>
     </Section>
