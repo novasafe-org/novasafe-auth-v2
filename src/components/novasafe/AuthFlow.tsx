@@ -743,6 +743,7 @@ function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
 function BiometricScreen({ go }: { go: (s: Step) => void }) {
   const [scanning, setScanning] = useState(false);
   const [done, setDone] = useState(false);
+  const { loading: continuing, run } = useAsync();
   const start = () => {
     setScanning(true);
     setTimeout(() => { setScanning(false); setDone(true); }, 1500);
@@ -771,7 +772,9 @@ function BiometricScreen({ go }: { go: (s: Step) => void }) {
           {scanning ? "Scanning…" : <><ScanFace className="h-4 w-4" /> Enable Face ID</>}
         </PrimaryButton>
       ) : (
-        <PrimaryButton onClick={() => go("device")}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+        <PrimaryButton loading={continuing} onClick={() => run(() => go("device"), 600)}>
+          {continuing ? "Saving…" : <>Continue <ArrowRight className="h-4 w-4" /></>}
+        </PrimaryButton>
       )}
       <button onClick={() => go("device")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
         Skip — set up later
