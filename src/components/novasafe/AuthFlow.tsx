@@ -183,6 +183,16 @@ function BackBtn({ onClick }: { onClick: () => void }) {
   );
 }
 
+function useAsync() {
+  const [loading, setLoading] = useState(false);
+  const run = (cb: () => void, ms = 800) => {
+    if (loading) return;
+    setLoading(true);
+    setTimeout(() => { setLoading(false); cb(); }, ms);
+  };
+  return { loading, run };
+}
+
 /* ----------------- Login ----------------- */
 
 function LoginScreen({ email, setEmail, go }: { email: string; setEmail: (s: string) => void; go: (s: Step) => void }) {
