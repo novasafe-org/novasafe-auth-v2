@@ -863,6 +863,7 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
     { email: "marco@atlas.dev", role: "Member" },
   ]);
   const [draft, setDraft] = useState("");
+  const { loading, run } = useAsync();
   const add = () => {
     if (!draft.includes("@")) return;
     setInvites([...invites, { email: draft, role: "Member" }]);
@@ -924,7 +925,9 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
       </div>
 
       <div>
-        <PrimaryButton onClick={() => go("welcome")}>Send invites & finish</PrimaryButton>
+        <PrimaryButton loading={loading} onClick={() => run(() => go("welcome"), 1000)}>
+          {loading ? "Sending invites…" : "Send invites & finish"}
+        </PrimaryButton>
         <button onClick={() => go("welcome")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
           Skip — I'll invite later
         </button>
