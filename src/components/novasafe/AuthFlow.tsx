@@ -796,6 +796,7 @@ function BioOption({ icon: Icon, label, sub, active }: { icon: React.ElementType
 
 function DeviceScreen({ go }: { go: (s: Step) => void }) {
   const [trusted, setTrusted] = useState(true);
+  const { loading, run } = useAsync();
   return (
     <Section>
       <BackBtn onClick={() => go("biometric")} />
@@ -834,7 +835,9 @@ function DeviceScreen({ go }: { go: (s: Step) => void }) {
         </button>
       </label>
 
-      <PrimaryButton onClick={() => go("workspace")}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+      <PrimaryButton loading={loading} onClick={() => run(() => go("workspace"), 700)}>
+        {loading ? "Saving device…" : <>Continue <ArrowRight className="h-4 w-4" /></>}
+      </PrimaryButton>
     </Section>
   );
 }
