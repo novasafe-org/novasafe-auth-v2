@@ -153,59 +153,15 @@ function PrimaryButton({
     <button
       {...rest}
       disabled={loading || rest.disabled}
-      aria-busy={loading || undefined}
-      className={`relative w-full h-11 rounded-[10px] bg-gradient-primary text-primary-foreground
-        font-medium text-[14px] shadow-cta transition-all overflow-hidden
+      className={`anim-shine relative w-full h-11 rounded-[10px] bg-gradient-primary text-primary-foreground
+        font-medium text-[14px] shadow-cta transition-all
         hover:-translate-y-[1px] hover:shadow-lg active:translate-y-0
-        disabled:cursor-not-allowed disabled:hover:translate-y-0
-        ${loading ? "opacity-95" : "disabled:opacity-50"}
-        ${loading ? "" : "anim-shine"}
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
         inline-flex items-center justify-center gap-2 ${rest.className ?? ""}`}
     >
-      {loading && (
-        <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[10px]">
-          <span
-            className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-            style={{ animation: "nv-loading-sweep 1.2s linear infinite" }}
-          />
-        </span>
-      )}
-      <span
-        className={`relative inline-flex items-center justify-center gap-2 transition-all duration-300
-          ${loading ? "translate-y-[0.5px]" : ""}`}
-      >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {children}
-      </span>
-    </button>
-  );
-}
-
-/* Nav button: handles its own loading state for go(next) transitions */
-function NavButton({
-  next, go, ms = 650, disabled, children, className,
-}: {
-  next: Step;
-  go: (s: Step) => void;
-  ms?: number;
-  disabled?: boolean;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const [loading, setLoading] = useState(false);
-  return (
-    <PrimaryButton
-      loading={loading}
-      disabled={disabled}
-      className={className}
-      onClick={() => {
-        if (loading) return;
-        setLoading(true);
-        setTimeout(() => go(next), ms);
-      }}
-    >
+      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
       {children}
-    </PrimaryButton>
+    </button>
   );
 }
 
@@ -426,9 +382,9 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
         )}
       </div>
 
-      <NavButton next="recoveryKit" go={go} disabled={!code.every((c) => c)}>
+      <PrimaryButton onClick={() => go("recoveryKit")} disabled={!code.every((c) => c)}>
         {verified ? <><Check className="h-4 w-4" /> Verified</> : "Verify & continue"}
-      </NavButton>
+      </PrimaryButton>
     </Section>
   );
 }
@@ -491,7 +447,7 @@ function ResetSuccess({ go }: { go: (s: Step) => void }) {
         </div>
         <Title eyebrow="Reset complete" title="You're all set" sub="Your master password has been securely updated. Sessions on other devices were signed out." />
         <div className="mt-6 w-full">
-          <NavButton next="login" go={go}>Continue to sign in</NavButton>
+          <PrimaryButton onClick={() => go("login")}>Continue to sign in</PrimaryButton>
         </div>
       </div>
     </Section>
@@ -511,9 +467,6 @@ function SignupScreen({
   const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
-  const [s0Loading, setS0Loading] = useState(false);
-  const [s1Loading, setS1Loading] = useState(false);
-  const [s2Loading, setS2Loading] = useState(false);
   const steps = ["Identity", "Security", "Workspace"];
 
   const strength = useMemo(() => {
@@ -543,19 +496,19 @@ function SignupScreen({
       </div>
 
       {step === 0 && (
-        <form onSubmit={(e) => { e.preventDefault(); if (s0Loading) return; setS0Loading(true); setTimeout(() => { setS0Loading(false); setStep(1); }, 600); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-4">
           <Field label="Full name">
             <Input required placeholder="Ada Lovelace" value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
           <Field label="Email">
             <Input type="email" required placeholder="ada@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
-          <PrimaryButton loading={s0Loading}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+          <PrimaryButton>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
         </form>
       )}
 
       {step === 1 && (
-        <form onSubmit={(e) => { e.preventDefault(); if (s1Loading) return; setS1Loading(true); setTimeout(() => { setS1Loading(false); setStep(2); }, 700); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-4">
           <Field label="Master password" hint={<span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" /> AI-evaluated</span>}>
             <div className="relative">
               <Input type={show ? "text" : "password"} required minLength={8} placeholder="At least 12 characters" value={pwd} onChange={(e) => setPwd(e.target.value)} className="pr-10" />
@@ -590,12 +543,12 @@ function SignupScreen({
             <Sparkles className="h-3.5 w-3.5" /> Generate a secure passphrase
           </button>
 
-          <PrimaryButton loading={s1Loading} disabled={strength < 3 || breached}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
+          <PrimaryButton disabled={strength < 3 || breached}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
         </form>
       )}
 
       {step === 2 && (
-        <form onSubmit={(e) => { e.preventDefault(); if (s2Loading) return; setS2Loading(true); setTimeout(() => go("otp"), 850); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); go("otp"); }} className="space-y-4">
           <Field label="Company or team (optional)">
             <Input placeholder="NovaSafe Inc." value={company} onChange={(e) => setCompany(e.target.value)} />
           </Field>
@@ -612,7 +565,7 @@ function SignupScreen({
             <ShieldCheck className="h-4 w-4 text-success mt-0.5 shrink-0" />
             We never see your master password or vault contents. Encryption happens on your device.
           </div>
-          <PrimaryButton loading={s2Loading}>Create vault & verify email</PrimaryButton>
+          <PrimaryButton>Create vault & verify email</PrimaryButton>
         </form>
       )}
     </Section>
@@ -686,9 +639,9 @@ function RecoveryKitScreen({ go }: { go: (s: Step) => void }) {
           <Download className="h-4 w-4" /> Download recovery kit
         </PrimaryButton>
       ) : (
-        <NavButton next="recoveryConfirm" go={go}>
+        <PrimaryButton onClick={() => go("recoveryConfirm")}>
           I've saved it · Continue <ArrowRight className="h-4 w-4" />
-        </NavButton>
+        </PrimaryButton>
       )}
       <button onClick={() => go("recoveryConfirm")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
         Skip for now (not recommended)
@@ -755,9 +708,9 @@ function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
 
       <div className="flex gap-2">
         <button onClick={() => setPicks({})} className="px-4 h-11 rounded-[10px] border border-border bg-card text-[13px] font-medium hover:bg-secondary transition-colors">Reset</button>
-        <NavButton next="biometric" go={go} disabled={!allCorrect}>
+        <PrimaryButton disabled={!allCorrect} onClick={() => go("biometric")}>
           {allCorrect ? <><Check className="h-4 w-4" /> Confirmed</> : "Confirm phrase"}
-        </NavButton>
+        </PrimaryButton>
       </div>
     </Section>
   );
@@ -796,7 +749,7 @@ function BiometricScreen({ go }: { go: (s: Step) => void }) {
           {scanning ? "Scanning…" : <><ScanFace className="h-4 w-4" /> Enable Face ID</>}
         </PrimaryButton>
       ) : (
-        <NavButton next="device" go={go}>Continue <ArrowRight className="h-4 w-4" /></NavButton>
+        <PrimaryButton onClick={() => go("device")}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
       )}
       <button onClick={() => go("device")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
         Skip — set up later
@@ -862,7 +815,7 @@ function DeviceScreen({ go }: { go: (s: Step) => void }) {
         </button>
       </label>
 
-      <NavButton next="workspace" go={go}>Continue <ArrowRight className="h-4 w-4" /></NavButton>
+      <PrimaryButton onClick={() => go("workspace")}>Continue <ArrowRight className="h-4 w-4" /></PrimaryButton>
     </Section>
   );
 }
@@ -949,7 +902,7 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
       </div>
 
       <div>
-        <NavButton next="welcome" go={go}>Send invites & finish</NavButton>
+        <PrimaryButton onClick={() => go("welcome")}>Send invites & finish</PrimaryButton>
         <button onClick={() => go("welcome")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
           Skip — I'll invite later
         </button>
@@ -987,9 +940,9 @@ function WelcomeScreen({ name, go }: { name: string; go: (s: Step) => void }) {
         </div>
 
         <div className="mt-6 w-full">
-          <NavButton next="login" go={go}>
+          <PrimaryButton onClick={() => go("login")}>
             <Sparkles className="h-4 w-4" /> Open my vault
-          </NavButton>
+          </PrimaryButton>
           <button onClick={() => go("login")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
             Take the 60-second tour
           </button>
