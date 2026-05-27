@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { env } from "@/config/env";
 
 function NotFoundComponent() {
   return (
@@ -95,10 +96,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
+  const googleClientId = env.GOOGLE_WEB_CLIENT_ID;
+  const runtimeEnvScript =
+    googleClientId.length > 0
+      ? `window.__NS_GOOGLE_CLIENT_ID__=${JSON.stringify(googleClientId)};`
+      : "";
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        {runtimeEnvScript ? (
+          <script dangerouslySetInnerHTML={{ __html: runtimeEnvScript }} />
+        ) : null}
       </head>
       <body>
         {children}

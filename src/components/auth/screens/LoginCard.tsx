@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
 
-import { authConfig } from "@/config";
 import { loginAction, googleLoginAction, type LoginResult } from "@/lib/auth";
+import { getGoogleWebClientId, isGoogleSignInEnabled } from "@/lib/auth/google-config";
 import { requestGoogleIdToken } from "@/lib/auth/google";
 import {
   Divider,
@@ -68,11 +68,17 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
   }
 
   async function continueWithGoogle() {
-    if (!authConfig.google.enabled || googleLoading) return;
+    const clientId = getGoogleWebClientId();
+    if (!clientId || googleLoading) {
+      if (!clientId) {
+        setError("Google Sign-In is not configured. Set VITE_GOOGLE_WEB_CLIENT_ID on the auth service.");
+      }
+      return;
+    }
     setError(null);
     setGoogleLoading(true);
     try {
-      const idToken = await requestGoogleIdToken(authConfig.google.webClientId);
+      const idToken = await requestGoogleIdToken(clientId);
       const result = await googleLoginAction({ data: { idToken, next: next ?? null } });
       if (result.status === "ok") {
         window.location.assign(result.redirectTo);
@@ -102,7 +108,12 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
         <button
           type="button"
           onClick={continueWithGoogle}
-          disabled={!authConfig.google.enabled || googleLoading || loading}
+          disabled={!isGoogleSignInEnabled() || googleLoading || loading}
+          title={
+            isGoogleSignInEnabled()
+              ? undefined
+              : "Google Sign-In requires VITE_GOOGLE_WEB_CLIENT_ID"
+          }
           className="group w-full h-11 rounded-[10px] bg-card border border-border text-[13px] font-medium inline-flex items-center justify-center gap-2.5 shadow-xs disabled:opacity-60 disabled:cursor-not-allowed hover:bg-secondary transition-colors"
         >
           <span className="text-foreground">
