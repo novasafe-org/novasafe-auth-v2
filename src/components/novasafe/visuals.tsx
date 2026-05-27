@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import {
-  Shield, ShieldCheck, Fingerprint, KeyRound, Globe2, Sparkles,
-  Lock, Smartphone, Sun, Moon, Check,
+  Shield,
+  ShieldCheck,
+  Fingerprint,
+  KeyRound,
+  Globe2,
+  Sparkles,
+  Lock,
+  Smartphone,
+  Sun,
+  Moon,
+  Check,
 } from "lucide-react";
 
 /* ---------- Logo ---------- */
@@ -36,7 +45,11 @@ export function ThemeToggle() {
     const next = !dark;
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
-    try { localStorage.setItem("nv-theme", next ? "dark" : "light"); } catch {}
+    try {
+      localStorage.setItem("nv-theme", next ? "dark" : "light");
+    } catch {
+      /* localStorage may be unavailable in privacy mode — ignore */
+    }
   };
   return (
     <button
@@ -44,10 +57,14 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       className="group inline-flex items-center gap-1 rounded-full border border-border bg-card/70 backdrop-blur px-1 py-1 text-xs shadow-xs hover:shadow-sm transition-all"
     >
-      <span className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${!dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}>
+      <span
+        className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${!dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
+      >
         <Sun className="h-3.5 w-3.5" />
       </span>
-      <span className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}>
+      <span
+        className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
+      >
         <Moon className="h-3.5 w-3.5" />
       </span>
     </button>
@@ -81,7 +98,9 @@ export function EditorialPanel({ headline, kicker }: { headline: string; kicker:
 
       {/* Editorial copy */}
       <div className="absolute bottom-10 left-8 right-8 max-w-[460px]">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-4">{kicker}</div>
+        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-4">
+          {kicker}
+        </div>
         <h2 className="text-[34px] leading-[1.08] font-semibold tracking-tight text-gradient">
           {headline}
         </h2>
@@ -138,12 +157,18 @@ function FloatingActivityCard() {
   return (
     <div className="absolute left-8 top-[42%] w-[260px] rounded-2xl border border-border bg-card shadow-lg p-4 anim-drift">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">This week</div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          This week
+        </div>
         <Sparkles className="h-3.5 w-3.5 text-primary" />
       </div>
       <div className="flex items-end gap-1.5 h-16">
-        {[40,55,38,72,60,85,68].map((h,i)=>(
-          <div key={i} className="flex-1 rounded-t-md bg-gradient-primary opacity-90" style={{height:`${h}%`}} />
+        {[40, 55, 38, 72, 60, 85, 68].map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t-md bg-gradient-primary opacity-90"
+            style={{ height: `${h}%` }}
+          />
         ))}
       </div>
       <div className="mt-3 flex items-center justify-between text-[11px]">
@@ -156,7 +181,10 @@ function FloatingActivityCard() {
 
 function FloatingPasskeyCard() {
   return (
-    <div className="absolute right-12 top-[52%] w-[240px] rounded-2xl border border-border bg-card shadow-lg p-4 anim-float" style={{animationDelay:"1.5s"}}>
+    <div
+      className="absolute right-12 top-[52%] w-[240px] rounded-2xl border border-border bg-card shadow-lg p-4 anim-float"
+      style={{ animationDelay: "1.5s" }}
+    >
       <div className="flex items-center gap-3">
         <div className="h-9 w-9 rounded-xl bg-primary-soft flex items-center justify-center">
           <Fingerprint className="h-4 w-4 text-primary" />

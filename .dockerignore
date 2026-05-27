@@ -1,0 +1,41 @@
+# Build artefacts — regenerated inside the image.
+dist
+.output
+.vite
+.tanstack
+.turbo
+
+# Local dev state.
+node_modules
+.pnpm-store
+
+# Source-control + editor noise.
+.git
+.gitignore
+.github
+.vscode
+.idea
+.cursor
+
+# Local-only env files. The Dockerfile reads VITE_* values from build-args
+# (production) and `process.env` (runtime) — never from a baked .env.
+.env
+.env.*
+!.env.example
+
+# Logs / OS files.
+*.log
+.DS_Store
+Thumbs.db
+
+# Cloudflare Workers state (only relevant when BUILD_TARGET=cloudflare).
+.wrangler
+
+# Tests / docs that don't ship.
+coverage
+*.md
+!README.md
+
+# Build configs irrelevant to runtime image.
+Dockerfile*
+.dockerignore

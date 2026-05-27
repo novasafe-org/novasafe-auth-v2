@@ -1,31 +1,68 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft, ArrowRight, Check, Eye, EyeOff, Fingerprint, Mail, Lock,
-  ShieldCheck, Smartphone, Download, KeyRound, Users, Sparkles,
-  Laptop, MapPin, Clock, RefreshCw, Plus, X, ScanFace, Loader2,
-  AlertTriangle, FileText,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
+  Fingerprint,
+  Mail,
+  Lock,
+  ShieldCheck,
+  Smartphone,
+  Download,
+  KeyRound,
+  Users,
+  Sparkles,
+  Laptop,
+  MapPin,
+  Clock,
+  RefreshCw,
+  Plus,
+  X,
+  ScanFace,
+  Loader2,
+  AlertTriangle,
+  FileText,
 } from "lucide-react";
 import { EditorialPanel, NovaLogo, ThemeToggle } from "./visuals";
 
 type Step =
-  | "login" | "forgot" | "resetSuccess"
-  | "signup" | "password" | "otp"
-  | "recoveryKit" | "recoveryConfirm"
-  | "biometric" | "device" | "workspace" | "welcome";
+  | "login"
+  | "forgot"
+  | "resetSuccess"
+  | "signup"
+  | "password"
+  | "otp"
+  | "recoveryKit"
+  | "recoveryConfirm"
+  | "biometric"
+  | "device"
+  | "workspace"
+  | "welcome";
 
 const COPY: Record<Step, { kicker: string; headline: string }> = {
-  login:           { kicker: "Welcome back", headline: "The vault that disappears when you don't need it." },
-  forgot:          { kicker: "Account recovery", headline: "Recovery, the way it should be — private and effortless." },
-  resetSuccess:    { kicker: "All set", headline: "Your access is restored. Quietly and securely." },
-  signup:          { kicker: "Create account", headline: "A calmer place for your digital identity." },
-  password:        { kicker: "Sign in", headline: "Decrypted on your device. Never on our servers." },
-  otp:             { kicker: "Two-factor", headline: "A second factor that takes one second." },
-  recoveryKit:     { kicker: "Critical step", headline: "The only key that opens your vault — held only by you." },
-  recoveryConfirm: { kicker: "Verify", headline: "A small ritual that keeps the vault yours forever." },
-  biometric:       { kicker: "Biometrics", headline: "You are the password. Nothing more is needed." },
-  device:          { kicker: "Device trust", headline: "Trust the devices you love. Question the rest." },
-  workspace:       { kicker: "Workspace", headline: "Share credentials without ever sharing secrets." },
-  welcome:         { kicker: "All set", headline: "Welcome to a quieter, safer internet." },
+  login: { kicker: "Welcome back", headline: "The vault that disappears when you don't need it." },
+  forgot: {
+    kicker: "Account recovery",
+    headline: "Recovery, the way it should be — private and effortless.",
+  },
+  resetSuccess: { kicker: "All set", headline: "Your access is restored. Quietly and securely." },
+  signup: { kicker: "Create account", headline: "A calmer place for your digital identity." },
+  password: { kicker: "Sign in", headline: "Decrypted on your device. Never on our servers." },
+  otp: { kicker: "Two-factor", headline: "A second factor that takes one second." },
+  recoveryKit: {
+    kicker: "Critical step",
+    headline: "The only key that opens your vault — held only by you.",
+  },
+  recoveryConfirm: {
+    kicker: "Verify",
+    headline: "A small ritual that keeps the vault yours forever.",
+  },
+  biometric: { kicker: "Biometrics", headline: "You are the password. Nothing more is needed." },
+  device: { kicker: "Device trust", headline: "Trust the devices you love. Question the rest." },
+  workspace: { kicker: "Workspace", headline: "Share credentials without ever sharing secrets." },
+  welcome: { kicker: "All set", headline: "Welcome to a quieter, safer internet." },
 };
 
 export function AuthFlow() {
@@ -49,12 +86,21 @@ export function AuthFlow() {
           <div className="relative flex flex-col">
             {/* Top bar */}
             <div className="flex items-center justify-between px-2 lg:px-6 pt-2">
-              <div className="lg:hidden"><NovaLogo /></div>
+              <div className="lg:hidden">
+                <NovaLogo />
+              </div>
               <div className="hidden lg:flex items-center gap-2 text-[11px] text-muted-foreground">
                 <span>Already have an account?</span>
-                <button onClick={() => go("login")} className="font-medium text-foreground hover:text-primary transition-colors">Sign in</button>
+                <button
+                  onClick={() => go("login")}
+                  className="font-medium text-foreground hover:text-primary transition-colors"
+                >
+                  Sign in
+                </button>
               </div>
-              <div className="ml-auto"><ThemeToggle /></div>
+              <div className="ml-auto">
+                <ThemeToggle />
+              </div>
             </div>
 
             <div className="flex-1 flex items-center justify-center overflow-y-auto scrollbar-hide">
@@ -67,9 +113,12 @@ export function AuthFlow() {
                   {step === "resetSuccess" && <ResetSuccess go={go} />}
                   {step === "signup" && (
                     <SignupScreen
-                      email={email} setEmail={setEmail}
-                      name={name} setName={setName}
-                      company={company} setCompany={setCompany}
+                      email={email}
+                      setEmail={setEmail}
+                      name={name}
+                      setName={setName}
+                      company={company}
+                      setCompany={setCompany}
                       go={go}
                     />
                   )}
@@ -84,11 +133,17 @@ export function AuthFlow() {
                 <FlowMap step={step} go={go} />
 
                 <div className="mt-8 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
-                  <a className="hover:text-foreground transition" href="#">Privacy</a>
+                  <a className="hover:text-foreground transition" href="#">
+                    Privacy
+                  </a>
                   <span className="h-1 w-1 rounded-full bg-border" />
-                  <a className="hover:text-foreground transition" href="#">Terms</a>
+                  <a className="hover:text-foreground transition" href="#">
+                    Terms
+                  </a>
                   <span className="h-1 w-1 rounded-full bg-border" />
-                  <a className="hover:text-foreground transition" href="#">Status</a>
+                  <a className="hover:text-foreground transition" href="#">
+                    Status
+                  </a>
                 </div>
               </div>
             </div>
@@ -113,15 +168,23 @@ function Title({ eyebrow, title, sub }: { eyebrow?: string; title: string; sub?:
           <span className="h-1 w-1 rounded-full bg-primary" /> {eyebrow}
         </div>
       )}
-      <h1 className="text-[30px] leading-[1.1] font-semibold tracking-tight text-foreground">{title}</h1>
+      <h1 className="text-[30px] leading-[1.1] font-semibold tracking-tight text-foreground">
+        {title}
+      </h1>
       {sub && <p className="mt-2.5 text-[14px] leading-relaxed text-muted-foreground">{sub}</p>}
     </div>
   );
 }
 
 function Field({
-  label, hint, children,
-}: { label: string; hint?: React.ReactNode; children: React.ReactNode }) {
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <div className="flex items-center justify-between mb-1.5">
@@ -147,7 +210,9 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
 }
 
 function PrimaryButton({
-  children, loading, ...rest
+  children,
+  loading,
+  ...rest
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean }) {
   return (
     <button
@@ -177,7 +242,10 @@ function GhostButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
 
 function BackBtn({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="text-[12px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 mb-6 transition-colors">
+    <button
+      onClick={onClick}
+      className="text-[12px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 mb-6 transition-colors"
+    >
       <ArrowLeft className="h-3.5 w-3.5" /> Back
     </button>
   );
@@ -188,20 +256,34 @@ function useAsync() {
   const run = (cb: () => void, ms = 800) => {
     if (loading) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); cb(); }, ms);
+    setTimeout(() => {
+      setLoading(false);
+      cb();
+    }, ms);
   };
   return { loading, run };
 }
 
 /* ----------------- Login ----------------- */
 
-function LoginScreen({ email, setEmail, go }: { email: string; setEmail: (s: string) => void; go: (s: Step) => void }) {
+function LoginScreen({
+  email,
+  setEmail,
+  go,
+}: {
+  email: string;
+  setEmail: (s: string) => void;
+  go: (s: Step) => void;
+}) {
   const [loading, setLoading] = useState(false);
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); go("password"); }, 700);
+    setTimeout(() => {
+      setLoading(false);
+      go("password");
+    }, 700);
   };
   return (
     <Section>
@@ -217,14 +299,24 @@ function LoginScreen({ email, setEmail, go }: { email: string; setEmail: (s: str
 
       <form onSubmit={submit} className="space-y-4">
         <Field label="Email">
-          <Input type="email" required placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            type="email"
+            required
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
 
         <div className="flex items-center justify-between">
           <label className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
             <Checkbox defaultChecked /> Remember me
           </label>
-          <button type="button" onClick={() => go("forgot")} className="text-[12px] text-foreground hover:text-primary transition-colors">
+          <button
+            type="button"
+            onClick={() => go("forgot")}
+            className="text-[12px] text-foreground hover:text-primary transition-colors"
+          >
             Forgot password?
           </button>
         </div>
@@ -236,7 +328,10 @@ function LoginScreen({ email, setEmail, go }: { email: string; setEmail: (s: str
 
       <p className="text-center text-[13px] text-muted-foreground">
         New to NovaSafe?{" "}
-        <button onClick={() => go("signup")} className="text-foreground font-medium hover:text-primary transition-colors">
+        <button
+          onClick={() => go("signup")}
+          className="text-foreground font-medium hover:text-primary transition-colors"
+        >
           Create an account
         </button>
       </p>
@@ -245,17 +340,37 @@ function LoginScreen({ email, setEmail, go }: { email: string; setEmail: (s: str
 }
 
 function Checkbox(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input type="checkbox" {...props} className="h-4 w-4 rounded-[5px] border-border accent-[var(--primary)]" />;
+  return (
+    <input
+      type="checkbox"
+      {...props}
+      className="h-4 w-4 rounded-[5px] border-border accent-[var(--primary)]"
+    />
+  );
 }
 
 function SocialBtn({ icon, label }: { icon: "google" | "apple" | "passkey"; label: string }) {
   const Icons: Record<string, React.ReactNode> = {
-    google: <svg viewBox="0 0 24 24" className="h-4 w-4"><path fill="#EA4335" d="M12 11v3.2h4.5c-.2 1.2-1.4 3.4-4.5 3.4-2.7 0-4.9-2.2-4.9-5s2.2-5 4.9-5c1.5 0 2.6.7 3.2 1.2L17.5 7C16 5.6 14.2 5 12 5c-3.9 0-7 3.1-7 7s3.1 7 7 7c4 0 6.7-2.8 6.7-6.8 0-.5 0-.8-.1-1.2H12z"/></svg>,
-    apple: <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.5-.1-2.8.9-3.6.9-.7 0-1.9-.9-3.1-.8-1.6 0-3 .9-3.8 2.4-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.7 3.1-.7 1.4 0 1.8.7 3.1.7 1.3 0 2.1-1.1 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.6-1-2.6-3.9zM14 5.7c.6-.8 1.1-1.9 1-2.9-.9 0-2.1.6-2.7 1.3-.6.7-1.1 1.8-1 2.8 1.1.1 2.1-.5 2.7-1.2z"/></svg>,
+    google: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4">
+        <path
+          fill="#EA4335"
+          d="M12 11v3.2h4.5c-.2 1.2-1.4 3.4-4.5 3.4-2.7 0-4.9-2.2-4.9-5s2.2-5 4.9-5c1.5 0 2.6.7 3.2 1.2L17.5 7C16 5.6 14.2 5 12 5c-3.9 0-7 3.1-7 7s3.1 7 7 7c4 0 6.7-2.8 6.7-6.8 0-.5 0-.8-.1-1.2H12z"
+        />
+      </svg>
+    ),
+    apple: (
+      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+        <path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.5-.1-2.8.9-3.6.9-.7 0-1.9-.9-3.1-.8-1.6 0-3 .9-3.8 2.4-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.4 1.2 0 1.6-.7 3.1-.7 1.4 0 1.8.7 3.1.7 1.3 0 2.1-1.1 2.9-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.6-1-2.6-3.9zM14 5.7c.6-.8 1.1-1.9 1-2.9-.9 0-2.1.6-2.7 1.3-.6.7-1.1 1.8-1 2.8 1.1.1 2.1-.5 2.7-1.2z" />
+      </svg>
+    ),
     passkey: <KeyRound className="h-4 w-4" />,
   };
   return (
-    <button type="button" className="group w-full h-11 rounded-[10px] bg-card border border-border hover:border-border-strong hover:bg-secondary transition-all text-[13px] font-medium inline-flex items-center justify-center gap-2.5 shadow-xs">
+    <button
+      type="button"
+      className="group w-full h-11 rounded-[10px] bg-card border border-border hover:border-border-strong hover:bg-secondary transition-all text-[13px] font-medium inline-flex items-center justify-center gap-2.5 shadow-xs"
+    >
       <span className="text-foreground">{Icons[icon]}</span>
       {label}
     </button>
@@ -290,20 +405,49 @@ function PasswordScreen({ email, go }: { email: string; go: (s: Step) => void })
           <div className="text-[11px] text-muted-foreground">Signing in as</div>
           <div className="text-[13px] font-medium truncate">{email || "you@company.com"}</div>
         </div>
-        <button onClick={() => go("login")} className="ml-auto text-[11px] text-muted-foreground hover:text-foreground">Switch</button>
+        <button
+          onClick={() => go("login")}
+          className="ml-auto text-[11px] text-muted-foreground hover:text-foreground"
+        >
+          Switch
+        </button>
       </div>
 
-      <Title title="Enter master password" sub="Decrypted only on this device. Never sent to our servers." />
+      <Title
+        title="Enter master password"
+        sub="Decrypted only on this device. Never sent to our servers."
+      />
 
       <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-3 py-2 text-[12px] text-muted-foreground">
-        <ShieldCheck className="h-3.5 w-3.5 text-success" /> Trusted device · MacBook Pro · San Francisco
+        <ShieldCheck className="h-3.5 w-3.5 text-success" /> Trusted device · MacBook Pro · San
+        Francisco
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); setLoading(true); setTimeout(() => { setLoading(false); go("otp"); }, 800); }} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setLoading(true);
+          setTimeout(() => {
+            setLoading(false);
+            go("otp");
+          }, 800);
+        }}
+        className="space-y-4"
+      >
         <Field label="Master password">
           <div className="relative">
-            <Input type={show ? "text" : "password"} placeholder="Enter your password" value={pwd} onChange={(e) => setPwd(e.target.value)} className="pr-10" />
-            <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+            <Input
+              type={show ? "text" : "password"}
+              placeholder="Enter your password"
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShow(!show)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
@@ -317,7 +461,11 @@ function PasswordScreen({ email, go }: { email: string; go: (s: Step) => void })
           <Fingerprint className="h-4 w-4 text-primary" /> Use biometrics instead
         </GhostButton>
 
-        <button type="button" onClick={() => go("forgot")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          type="button"
+          onClick={() => go("forgot")}
+          className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+        >
           Forgot master password?
         </button>
       </form>
@@ -342,7 +490,9 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
 
   const setIdx = (i: number, v: string) => {
     const ch = v.replace(/\D/g, "").slice(-1);
-    const next = [...code]; next[i] = ch; setCode(next);
+    const next = [...code];
+    next[i] = ch;
+    setCode(next);
     if (ch && i < 5) refs.current[i + 1]?.focus();
     if (next.every((c) => c) && next.join("").length === 6) {
       setVerified(true);
@@ -353,7 +503,11 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
   return (
     <Section>
       <BackBtn onClick={() => go("password")} />
-      <Title eyebrow="Two-factor" title="Verify it's you" sub={`We sent a 6-digit code to ${email || "your email"}.`} />
+      <Title
+        eyebrow="Two-factor"
+        title="Verify it's you"
+        sub={`We sent a 6-digit code to ${email || "your email"}.`}
+      />
 
       <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-xs">
         <div className="h-9 w-9 rounded-xl bg-primary-soft flex items-center justify-center">
@@ -369,10 +523,14 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
         {code.map((c, i) => (
           <input
             key={i}
-            ref={(el) => { refs.current[i] = el; }}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
             value={c}
             onChange={(e) => setIdx(i, e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Backspace" && !c && i > 0) refs.current[i - 1]?.focus(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Backspace" && !c && i > 0) refs.current[i - 1]?.focus();
+            }}
             inputMode="numeric"
             maxLength={1}
             className={`h-14 w-12 rounded-xl border text-center text-[20px] font-semibold transition-all bg-input
@@ -387,7 +545,10 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
         {timer > 0 ? (
           <span>Resend in 0:{timer.toString().padStart(2, "0")}</span>
         ) : (
-          <button onClick={() => setTimer(30)} className="text-foreground hover:text-primary inline-flex items-center gap-1 transition-colors">
+          <button
+            onClick={() => setTimer(30)}
+            className="text-foreground hover:text-primary inline-flex items-center gap-1 transition-colors"
+          >
             <RefreshCw className="h-3 w-3" /> Resend code
           </button>
         )}
@@ -395,10 +556,23 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
 
       <PrimaryButton
         loading={loading}
-        onClick={() => run(() => { setVerified(true); setTimeout(() => go("recoveryKit"), 400); }, 900)}
+        onClick={() =>
+          run(() => {
+            setVerified(true);
+            setTimeout(() => go("recoveryKit"), 400);
+          }, 900)
+        }
         disabled={!code.every((c) => c)}
       >
-        {verified ? <><Check className="h-4 w-4" /> Verified</> : loading ? "Verifying…" : "Verify & continue"}
+        {verified ? (
+          <>
+            <Check className="h-4 w-4" /> Verified
+          </>
+        ) : loading ? (
+          "Verifying…"
+        ) : (
+          "Verify & continue"
+        )}
       </PrimaryButton>
     </Section>
   );
@@ -406,13 +580,25 @@ function OtpScreen({ email, go }: { email: string; go: (s: Step) => void }) {
 
 /* ----------------- Forgot / Reset ----------------- */
 
-function ForgotScreen({ email, setEmail, go }: { email: string; setEmail: (s: string) => void; go: (s: Step) => void }) {
+function ForgotScreen({
+  email,
+  setEmail,
+  go,
+}: {
+  email: string;
+  setEmail: (s: string) => void;
+  go: (s: Step) => void;
+}) {
   const [sent, setSent] = useState(false);
   const [method, setMethod] = useState(0);
   return (
     <Section>
       <BackBtn onClick={() => go("login")} />
-      <Title eyebrow="Recovery" title="Recover your access" sub="Choose a recovery method. Your vault stays encrypted throughout." />
+      <Title
+        eyebrow="Recovery"
+        title="Recover your access"
+        sub="Choose a recovery method. Your vault stays encrypted throughout."
+      />
 
       <div className="grid gap-2">
         {[
@@ -420,25 +606,65 @@ function ForgotScreen({ email, setEmail, go }: { email: string; setEmail: (s: st
           { icon: KeyRound, title: "Recovery key file", desc: "Use the encrypted PDF you saved" },
           { icon: Fingerprint, title: "Passkey or biometric", desc: "Use a trusted device" },
         ].map((opt, i) => (
-          <RecoveryOption key={opt.title} icon={opt.icon} title={opt.title} desc={opt.desc} active={method === i} onClick={() => setMethod(i)} />
+          <RecoveryOption
+            key={opt.title}
+            icon={opt.icon}
+            title={opt.title}
+            desc={opt.desc}
+            active={method === i}
+            onClick={() => setMethod(i)}
+          />
         ))}
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); setSent(true); setTimeout(() => go("resetSuccess"), 1000); }} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSent(true);
+          setTimeout(() => go("resetSuccess"), 1000);
+        }}
+        className="space-y-4"
+      >
         <Field label="Email on your account">
-          <Input type="email" required placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            type="email"
+            required
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
-        <PrimaryButton loading={sent}>{sent ? "Sending secure link…" : "Send recovery link"}</PrimaryButton>
+        <PrimaryButton loading={sent}>
+          {sent ? "Sending secure link…" : "Send recovery link"}
+        </PrimaryButton>
       </form>
     </Section>
   );
 }
 
-function RecoveryOption({ icon: Icon, title, desc, active, onClick }: { icon: React.ElementType; title: string; desc: string; active?: boolean; onClick?: () => void }) {
+function RecoveryOption({
+  icon: Icon,
+  title,
+  desc,
+  active,
+  onClick,
+}: {
+  icon: React.ElementType;
+  title: string;
+  desc: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <button onClick={onClick} type="button" className={`w-full text-left rounded-xl border p-3.5 flex items-center gap-3 transition-all
-      ${active ? "border-primary bg-primary-soft/40 ring-soft" : "border-border bg-card hover:border-border-strong shadow-xs"}`}>
-      <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${active ? "bg-gradient-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+    <button
+      onClick={onClick}
+      type="button"
+      className={`w-full text-left rounded-xl border p-3.5 flex items-center gap-3 transition-all
+      ${active ? "border-primary bg-primary-soft/40 ring-soft" : "border-border bg-card hover:border-border-strong shadow-xs"}`}
+    >
+      <div
+        className={`h-9 w-9 rounded-xl flex items-center justify-center ${active ? "bg-gradient-primary text-primary-foreground" : "bg-secondary text-foreground"}`}
+      >
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1">
@@ -461,7 +687,11 @@ function ResetSuccess({ go }: { go: (s: Step) => void }) {
             <Check className="h-9 w-9 text-success-foreground" strokeWidth={3} />
           </div>
         </div>
-        <Title eyebrow="Reset complete" title="You're all set" sub="Your master password has been securely updated. Sessions on other devices were signed out." />
+        <Title
+          eyebrow="Reset complete"
+          title="You're all set"
+          sub="Your master password has been securely updated. Sessions on other devices were signed out."
+        />
         <div className="mt-6 w-full">
           <PrimaryButton loading={loading} onClick={() => run(() => go("login"), 600)}>
             {loading ? "Redirecting…" : "Continue to sign in"}
@@ -475,11 +705,20 @@ function ResetSuccess({ go }: { go: (s: Step) => void }) {
 /* ----------------- Signup ----------------- */
 
 function SignupScreen({
-  email, setEmail, name, setName, company, setCompany, go,
+  email,
+  setEmail,
+  name,
+  setName,
+  company,
+  setCompany,
+  go,
 }: {
-  email: string; setEmail: (s: string) => void;
-  name: string; setName: (s: string) => void;
-  company: string; setCompany: (s: string) => void;
+  email: string;
+  setEmail: (s: string) => void;
+  name: string;
+  setName: (s: string) => void;
+  company: string;
+  setCompany: (s: string) => void;
   go: (s: Step) => void;
 }) {
   const [pwd, setPwd] = useState("");
@@ -502,36 +741,96 @@ function SignupScreen({
   return (
     <Section>
       <BackBtn onClick={() => (step === 0 ? go("login") : setStep(step - 1))} />
-      <Title eyebrow={`Step ${step + 1} of 3`} title="Create your vault" sub="Two minutes to a calmer, safer life online." />
+      <Title
+        eyebrow={`Step ${step + 1} of 3`}
+        title="Create your vault"
+        sub="Two minutes to a calmer, safer life online."
+      />
 
       {/* Stepper */}
       <div className="flex gap-2">
         {steps.map((s, i) => (
           <div key={s} className="flex-1">
-            <div className={`h-[3px] rounded-full transition-all ${i <= step ? "bg-gradient-primary" : "bg-border"}`} />
-            <div className={`mt-2 text-[11px] ${i === step ? "text-foreground font-medium" : "text-muted-foreground"}`}>{s}</div>
+            <div
+              className={`h-[3px] rounded-full transition-all ${i <= step ? "bg-gradient-primary" : "bg-border"}`}
+            />
+            <div
+              className={`mt-2 text-[11px] ${i === step ? "text-foreground font-medium" : "text-muted-foreground"}`}
+            >
+              {s}
+            </div>
           </div>
         ))}
       </div>
 
       {step === 0 && (
-        <form onSubmit={(e) => { e.preventDefault(); run(() => setStep(1), 600); }} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            run(() => setStep(1), 600);
+          }}
+          className="space-y-4"
+        >
           <Field label="Full name">
-            <Input required placeholder="Ada Lovelace" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input
+              required
+              placeholder="Ada Lovelace"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </Field>
           <Field label="Email">
-            <Input type="email" required placeholder="ada@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              type="email"
+              required
+              placeholder="ada@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </Field>
-          <PrimaryButton loading={loading}>{loading ? "Checking…" : <>Continue <ArrowRight className="h-4 w-4" /></>}</PrimaryButton>
+          <PrimaryButton loading={loading}>
+            {loading ? (
+              "Checking…"
+            ) : (
+              <>
+                Continue <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </PrimaryButton>
         </form>
       )}
 
       {step === 1 && (
-        <form onSubmit={(e) => { e.preventDefault(); run(() => setStep(2), 700); }} className="space-y-4">
-          <Field label="Master password" hint={<span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" /> AI-evaluated</span>}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            run(() => setStep(2), 700);
+          }}
+          className="space-y-4"
+        >
+          <Field
+            label="Master password"
+            hint={
+              <span className="inline-flex items-center gap-1">
+                <Sparkles className="h-3 w-3" /> AI-evaluated
+              </span>
+            }
+          >
             <div className="relative">
-              <Input type={show ? "text" : "password"} required minLength={8} placeholder="At least 12 characters" value={pwd} onChange={(e) => setPwd(e.target.value)} className="pr-10" />
-              <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <Input
+                type={show ? "text" : "password"}
+                required
+                minLength={8}
+                placeholder="At least 12 characters"
+                value={pwd}
+                onChange={(e) => setPwd(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShow(!show)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
@@ -540,43 +839,77 @@ function SignupScreen({
           <div>
             <div className="flex gap-1 mb-2">
               {[0, 1, 2, 3, 4].map((i) => (
-                <div key={i} className={`h-[3px] flex-1 rounded-full transition-all ${
-                  i < strength
-                    ? strength <= 2 ? "bg-destructive" : strength <= 3 ? "bg-yellow-500" : "bg-success"
-                    : "bg-border"
-                }`} />
+                <div
+                  key={i}
+                  className={`h-[3px] flex-1 rounded-full transition-all ${
+                    i < strength
+                      ? strength <= 2
+                        ? "bg-destructive"
+                        : strength <= 3
+                          ? "bg-yellow-500"
+                          : "bg-success"
+                      : "bg-border"
+                  }`}
+                />
               ))}
             </div>
             <div className="text-[12px] text-muted-foreground">
-              {pwd ? ["Very weak", "Weak", "Fair", "Good", "Strong", "Excellent"][strength] : "Use at least 12 characters with letters, numbers and symbols."}
+              {pwd
+                ? ["Very weak", "Weak", "Fair", "Good", "Strong", "Excellent"][strength]
+                : "Use at least 12 characters with letters, numbers and symbols."}
             </div>
           </div>
 
           {breached && (
             <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive">
-              <AlertTriangle className="h-4 w-4 mt-0.5" /> This password has appeared in 3,847 known breaches. Pick another.
+              <AlertTriangle className="h-4 w-4 mt-0.5" /> This password has appeared in 3,847 known
+              breaches. Pick another.
             </div>
           )}
 
-          <button type="button" onClick={() => setPwd("Sapphire-Orbit-Falcon-94!")} className="text-[12px] text-foreground hover:text-primary inline-flex items-center gap-1.5 transition-colors">
+          <button
+            type="button"
+            onClick={() => setPwd("Sapphire-Orbit-Falcon-94!")}
+            className="text-[12px] text-foreground hover:text-primary inline-flex items-center gap-1.5 transition-colors"
+          >
             <Sparkles className="h-3.5 w-3.5" /> Generate a secure passphrase
           </button>
 
           <PrimaryButton loading={loading} disabled={strength < 3 || breached}>
-            {loading ? "Securing password…" : <>Continue <ArrowRight className="h-4 w-4" /></>}
+            {loading ? (
+              "Securing password…"
+            ) : (
+              <>
+                Continue <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </PrimaryButton>
         </form>
       )}
 
       {step === 2 && (
-        <form onSubmit={(e) => { e.preventDefault(); run(() => go("otp"), 1100); }} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            run(() => go("otp"), 1100);
+          }}
+          className="space-y-4"
+        >
           <Field label="Company or team (optional)">
-            <Input placeholder="NovaSafe Inc." value={company} onChange={(e) => setCompany(e.target.value)} />
+            <Input
+              placeholder="NovaSafe Inc."
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+            />
           </Field>
           <Field label="Team size">
             <div className="grid grid-cols-4 gap-2">
               {["Just me", "2–10", "11–50", "50+"].map((s, i) => (
-                <button type="button" key={s} className={`h-10 rounded-[10px] border text-[12px] font-medium transition-all ${i === 1 ? "border-primary bg-primary-soft text-foreground ring-soft" : "border-border bg-card hover:border-border-strong"}`}>
+                <button
+                  type="button"
+                  key={s}
+                  className={`h-10 rounded-[10px] border text-[12px] font-medium transition-all ${i === 1 ? "border-primary bg-primary-soft text-foreground ring-soft" : "border-border bg-card hover:border-border-strong"}`}
+                >
                   {s}
                 </button>
               ))}
@@ -586,7 +919,9 @@ function SignupScreen({
             <ShieldCheck className="h-4 w-4 text-success mt-0.5 shrink-0" />
             We never see your master password or vault contents. Encryption happens on your device.
           </div>
-          <PrimaryButton loading={loading}>{loading ? "Creating vault…" : "Create vault & verify email"}</PrimaryButton>
+          <PrimaryButton loading={loading}>
+            {loading ? "Creating vault…" : "Create vault & verify email"}
+          </PrimaryButton>
         </form>
       )}
     </Section>
@@ -605,7 +940,13 @@ function RecoveryKitScreen({ go }: { go: (s: Step) => void }) {
     setProgress(0);
     const i = setInterval(() => {
       setProgress((p) => {
-        if (p >= 100) { clearInterval(i); setDone(true); setDownloading(false); triggerPdf(); return 100; }
+        if (p >= 100) {
+          clearInterval(i);
+          setDone(true);
+          setDownloading(false);
+          triggerPdf();
+          return 100;
+        }
         return p + 4;
       });
     }, 50);
@@ -616,13 +957,19 @@ function RecoveryKitScreen({ go }: { go: (s: Step) => void }) {
     const blob = new Blob([content], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "NovaSafe-Recovery-Kit.pdf"; a.click();
+    a.href = url;
+    a.download = "NovaSafe-Recovery-Kit.pdf";
+    a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
     <Section>
-      <Title eyebrow="Important" title="Your recovery kit" sub="Only you can decrypt your vault. If you lose your password, this kit is the only way back in." />
+      <Title
+        eyebrow="Important"
+        title="Your recovery kit"
+        sub="Only you can decrypt your vault. If you lose your password, this kit is the only way back in."
+      />
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-md">
         <div className="flex items-center gap-3.5">
@@ -633,18 +980,28 @@ function RecoveryKitScreen({ go }: { go: (s: Step) => void }) {
             <div className="text-[13px] font-semibold truncate">NovaSafe Recovery Kit.pdf</div>
             <div className="text-[11px] text-muted-foreground mt-0.5">Encrypted · 4.2 KB</div>
           </div>
-          {done && <div className="h-7 w-7 rounded-full bg-success flex items-center justify-center"><Check className="h-4 w-4 text-success-foreground" /></div>}
+          {done && (
+            <div className="h-7 w-7 rounded-full bg-success flex items-center justify-center">
+              <Check className="h-4 w-4 text-success-foreground" />
+            </div>
+          )}
         </div>
         <div className="mt-4 font-mono text-[11px] tracking-[0.12em] text-foreground break-all bg-secondary rounded-lg p-3 border border-border">
-          {downloading || done ? "A1B2-C3D4-E5F6-G7H8-J9K0-L1M2-N3P4-Q5R6"
+          {downloading || done
+            ? "A1B2-C3D4-E5F6-G7H8-J9K0-L1M2-N3P4-Q5R6"
             : "•••• •••• •••• •••• •••• •••• •••• ••••"}
         </div>
         {downloading && (
           <div className="mt-3">
             <div className="h-1 w-full rounded-full bg-secondary overflow-hidden">
-              <div className="h-full bg-gradient-primary transition-all" style={{ width: `${progress}%` }} />
+              <div
+                className="h-full bg-gradient-primary transition-all"
+                style={{ width: `${progress}%` }}
+              />
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1.5">Generating encrypted bundle… {progress}%</div>
+            <div className="text-[10px] text-muted-foreground mt-1.5">
+              Generating encrypted bundle… {progress}%
+            </div>
           </div>
         )}
       </div>
@@ -664,7 +1021,10 @@ function RecoveryKitScreen({ go }: { go: (s: Step) => void }) {
           I've saved it · Continue <ArrowRight className="h-4 w-4" />
         </PrimaryButton>
       )}
-      <button onClick={() => go("recoveryConfirm")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+      <button
+        onClick={() => go("recoveryConfirm")}
+        className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+      >
         Skip for now (not recommended)
       </button>
     </Section>
@@ -681,7 +1041,20 @@ function Bullet({ children }: { children: React.ReactNode }) {
 
 /* ----------------- Recovery Phrase Confirmation ----------------- */
 
-const PHRASE = ["sapphire", "orbit", "falcon", "lunar", "harbor", "matrix", "pixel", "ember", "north", "quantum", "zenith", "rivet"];
+const PHRASE = [
+  "sapphire",
+  "orbit",
+  "falcon",
+  "lunar",
+  "harbor",
+  "matrix",
+  "pixel",
+  "ember",
+  "north",
+  "quantum",
+  "zenith",
+  "rivet",
+];
 
 function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
   const challenge = [3, 7, 10];
@@ -697,14 +1070,23 @@ function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
   return (
     <Section>
       <BackBtn onClick={() => go("recoveryKit")} />
-      <Title eyebrow="Confirm phrase" title="Verify your recovery phrase" sub="Tap the words from your recovery phrase in the right slots." />
+      <Title
+        eyebrow="Confirm phrase"
+        title="Verify your recovery phrase"
+        sub="Tap the words from your recovery phrase in the right slots."
+      />
 
       <div className="grid grid-cols-3 gap-2">
         {PHRASE.map((w, i) => (
-          <div key={i} className={`relative rounded-xl border p-3 ${challenge.includes(i) ? "border-primary bg-primary-soft/40" : "border-border bg-card"}`}>
+          <div
+            key={i}
+            className={`relative rounded-xl border p-3 ${challenge.includes(i) ? "border-primary bg-primary-soft/40" : "border-border bg-card"}`}
+          >
             <div className="text-[10px] text-muted-foreground">{i + 1}</div>
             <div className="text-[13px] font-medium mt-0.5 text-foreground">
-              {challenge.includes(i) ? (picks[i] || <span className="text-muted-foreground/70">—</span>) : w}
+              {challenge.includes(i)
+                ? picks[i] || <span className="text-muted-foreground/70">—</span>
+                : w}
             </div>
           </div>
         ))}
@@ -723,15 +1105,34 @@ function RecoveryConfirmScreen({ go }: { go: (s: Step) => void }) {
               }}
               className={`px-3.5 h-9 rounded-lg border text-[12px] font-medium transition-all
                 ${used ? "border-border bg-secondary text-muted-foreground/50" : "border-border bg-card hover:border-primary hover:bg-primary-soft/40 shadow-xs"}`}
-            >{w}</button>
+            >
+              {w}
+            </button>
           );
         })}
       </div>
 
       <div className="flex gap-2">
-        <button onClick={() => setPicks({})} className="px-4 h-11 rounded-[10px] border border-border bg-card text-[13px] font-medium hover:bg-secondary transition-colors">Reset</button>
-        <PrimaryButton loading={loading} disabled={!allCorrect} onClick={() => run(() => go("biometric"), 700)}>
-          {loading ? "Confirming…" : allCorrect ? <><Check className="h-4 w-4" /> Confirmed</> : "Confirm phrase"}
+        <button
+          onClick={() => setPicks({})}
+          className="px-4 h-11 rounded-[10px] border border-border bg-card text-[13px] font-medium hover:bg-secondary transition-colors"
+        >
+          Reset
+        </button>
+        <PrimaryButton
+          loading={loading}
+          disabled={!allCorrect}
+          onClick={() => run(() => go("biometric"), 700)}
+        >
+          {loading ? (
+            "Confirming…"
+          ) : allCorrect ? (
+            <>
+              <Check className="h-4 w-4" /> Confirmed
+            </>
+          ) : (
+            "Confirm phrase"
+          )}
         </PrimaryButton>
       </div>
     </Section>
@@ -746,18 +1147,31 @@ function BiometricScreen({ go }: { go: (s: Step) => void }) {
   const { loading: continuing, run } = useAsync();
   const start = () => {
     setScanning(true);
-    setTimeout(() => { setScanning(false); setDone(true); }, 1500);
+    setTimeout(() => {
+      setScanning(false);
+      setDone(true);
+    }, 1500);
   };
   return (
     <Section>
       <BackBtn onClick={() => go("recoveryConfirm")} />
-      <Title eyebrow="Biometrics" title="You are the password" sub="Unlock instantly with Face ID, fingerprint or a passkey." />
+      <Title
+        eyebrow="Biometrics"
+        title="You are the password"
+        sub="Unlock instantly with Face ID, fingerprint or a passkey."
+      />
 
       <div className="relative mx-auto h-36 w-36">
         <div className="absolute inset-0 rounded-full border border-border" />
         <div className="absolute inset-3 rounded-full border border-border" />
-        <div className={`absolute inset-6 rounded-full bg-primary-soft flex items-center justify-center transition-all ${scanning ? "ring-soft" : ""}`}>
-          {done ? <Check className="h-12 w-12 text-success" strokeWidth={2.5} /> : <ScanFace className="h-12 w-12 text-primary" strokeWidth={1.5} />}
+        <div
+          className={`absolute inset-6 rounded-full bg-primary-soft flex items-center justify-center transition-all ${scanning ? "ring-soft" : ""}`}
+        >
+          {done ? (
+            <Check className="h-12 w-12 text-success" strokeWidth={2.5} />
+          ) : (
+            <ScanFace className="h-12 w-12 text-primary" strokeWidth={1.5} />
+          )}
         </div>
       </div>
 
@@ -769,31 +1183,62 @@ function BiometricScreen({ go }: { go: (s: Step) => void }) {
 
       {!done ? (
         <PrimaryButton onClick={start} loading={scanning}>
-          {scanning ? "Scanning…" : <><ScanFace className="h-4 w-4" /> Enable Face ID</>}
+          {scanning ? (
+            "Scanning…"
+          ) : (
+            <>
+              <ScanFace className="h-4 w-4" /> Enable Face ID
+            </>
+          )}
         </PrimaryButton>
       ) : (
         <PrimaryButton loading={continuing} onClick={() => run(() => go("device"), 600)}>
-          {continuing ? "Saving…" : <>Continue <ArrowRight className="h-4 w-4" /></>}
+          {continuing ? (
+            "Saving…"
+          ) : (
+            <>
+              Continue <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </PrimaryButton>
       )}
-      <button onClick={() => go("device")} className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+      <button
+        onClick={() => go("device")}
+        className="block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+      >
         Skip — set up later
       </button>
     </Section>
   );
 }
 
-function BioOption({ icon: Icon, label, sub, active }: { icon: React.ElementType; label: string; sub: string; active?: boolean }) {
+function BioOption({
+  icon: Icon,
+  label,
+  sub,
+  active,
+}: {
+  icon: React.ElementType;
+  label: string;
+  sub: string;
+  active?: boolean;
+}) {
   return (
-    <div className={`rounded-xl border p-3 flex items-center gap-3 transition-all ${active ? "border-primary bg-primary-soft/40 ring-soft" : "border-border bg-card shadow-xs"}`}>
-      <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${active ? "bg-gradient-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+    <div
+      className={`rounded-xl border p-3 flex items-center gap-3 transition-all ${active ? "border-primary bg-primary-soft/40 ring-soft" : "border-border bg-card shadow-xs"}`}
+    >
+      <div
+        className={`h-9 w-9 rounded-xl flex items-center justify-center ${active ? "bg-gradient-primary text-primary-foreground" : "bg-secondary text-foreground"}`}
+      >
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1">
         <div className="text-[13px] font-medium text-foreground">{label}</div>
         <div className="text-[11px] text-muted-foreground">{sub}</div>
       </div>
-      {active && <span className="text-[10px] uppercase tracking-[0.18em] text-primary">Active</span>}
+      {active && (
+        <span className="text-[10px] uppercase tracking-[0.18em] text-primary">Active</span>
+      )}
     </div>
   );
 }
@@ -806,7 +1251,11 @@ function DeviceScreen({ go }: { go: (s: Step) => void }) {
   return (
     <Section>
       <BackBtn onClick={() => go("biometric")} />
-      <Title eyebrow="Device trust" title="Trust this device?" sub="We'll skip 2FA on this device for the next 30 days." />
+      <Title
+        eyebrow="Device trust"
+        title="Trust this device?"
+        sub="We'll skip 2FA on this device for the next 30 days."
+      />
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-md">
         <div className="flex items-center gap-4">
@@ -817,7 +1266,9 @@ function DeviceScreen({ go }: { go: (s: Step) => void }) {
             <div className="text-[13px] font-semibold truncate">MacBook Pro · Chrome 132</div>
             <div className="text-[11px] text-muted-foreground">macOS 15.2 · This device</div>
           </div>
-          <span className="px-2 py-1 rounded-md bg-success/15 text-success text-[10px] uppercase tracking-[0.18em] font-medium">Verified</span>
+          <span className="px-2 py-1 rounded-md bg-success/15 text-success text-[10px] uppercase tracking-[0.18em] font-medium">
+            Verified
+          </span>
         </div>
         <div className="grid grid-cols-2 gap-2 mt-4">
           <DeviceRow icon={MapPin} label="Location" value="San Francisco" />
@@ -837,18 +1288,34 @@ function DeviceScreen({ go }: { go: (s: Step) => void }) {
           onClick={() => setTrusted(!trusted)}
           className={`relative h-6 w-11 rounded-full transition-colors ${trusted ? "bg-gradient-primary" : "bg-border"}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-sm transition-all ${trusted ? "left-[22px]" : "left-0.5"}`} />
+          <span
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-sm transition-all ${trusted ? "left-[22px]" : "left-0.5"}`}
+          />
         </button>
       </label>
 
       <PrimaryButton loading={loading} onClick={() => run(() => go("workspace"), 700)}>
-        {loading ? "Saving device…" : <>Continue <ArrowRight className="h-4 w-4" /></>}
+        {loading ? (
+          "Saving device…"
+        ) : (
+          <>
+            Continue <ArrowRight className="h-4 w-4" />
+          </>
+        )}
       </PrimaryButton>
     </Section>
   );
 }
 
-function DeviceRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function DeviceRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-center gap-2.5 rounded-lg bg-secondary border border-border p-2.5">
       <Icon className="h-3.5 w-3.5 text-primary" />
@@ -878,7 +1345,11 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
   return (
     <Section>
       <BackBtn onClick={() => go("device")} />
-      <Title eyebrow="Workspace" title="Set up your team vault" sub="Securely share credentials with role-based access." />
+      <Title
+        eyebrow="Workspace"
+        title="Set up your team vault"
+        sub="Securely share credentials with role-based access."
+      />
 
       <Field label="Workspace name">
         <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -890,26 +1361,45 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
           <span className="text-[12px] font-medium text-foreground">Invite teammates</span>
         </div>
         <div className="flex gap-2">
-          <Input placeholder="teammate@company.com" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())} />
-          <button type="button" onClick={add} className="h-11 w-11 rounded-[10px] bg-gradient-primary text-primary-foreground inline-flex items-center justify-center shadow-cta shrink-0 hover:-translate-y-[1px] transition-transform">
+          <Input
+            placeholder="teammate@company.com"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())}
+          />
+          <button
+            type="button"
+            onClick={add}
+            className="h-11 w-11 rounded-[10px] bg-gradient-primary text-primary-foreground inline-flex items-center justify-center shadow-cta shrink-0 hover:-translate-y-[1px] transition-transform"
+          >
             <Plus className="h-4 w-4" />
           </button>
         </div>
         <div className="mt-3 space-y-2">
           {invites.map((m, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 shadow-xs">
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 shadow-xs"
+            >
               <div className="h-8 w-8 rounded-lg bg-gradient-primary text-primary-foreground text-[12px] font-semibold flex items-center justify-center">
                 {m.email[0].toUpperCase()}
               </div>
               <div className="flex-1 text-[13px] text-foreground truncate">{m.email}</div>
               <select
                 value={m.role}
-                onChange={(e) => setInvites(invites.map((x, j) => j === i ? { ...x, role: e.target.value } : x))}
+                onChange={(e) =>
+                  setInvites(invites.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))
+                }
                 className="bg-secondary border border-border rounded-lg px-2 py-1 text-[11px] text-foreground"
               >
-                <option>Admin</option><option>Member</option><option>Viewer</option>
+                <option>Admin</option>
+                <option>Member</option>
+                <option>Viewer</option>
               </select>
-              <button onClick={() => setInvites(invites.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive transition-colors">
+              <button
+                onClick={() => setInvites(invites.filter((_, j) => j !== i))}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -925,7 +1415,9 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
         ].map((s) => (
           <div key={s.l} className="rounded-xl border border-border bg-card p-3 shadow-xs">
             <div className="text-[13px] font-semibold text-foreground">{s.v}</div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">{s.l}</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
+              {s.l}
+            </div>
           </div>
         ))}
       </div>
@@ -934,7 +1426,10 @@ function WorkspaceScreen({ company, go }: { company: string; go: (s: Step) => vo
         <PrimaryButton loading={loading} onClick={() => run(() => go("welcome"), 1000)}>
           {loading ? "Sending invites…" : "Send invites & finish"}
         </PrimaryButton>
-        <button onClick={() => go("welcome")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          onClick={() => go("welcome")}
+          className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+        >
           Skip — I'll invite later
         </button>
       </div>
@@ -956,7 +1451,11 @@ function WelcomeScreen({ name, go }: { name: string; go: (s: Step) => void }) {
           </div>
         </div>
 
-        <Title eyebrow="Vault unlocked" title={`Welcome, ${name}.`} sub="Your encrypted vault is live. Add your first credentials and bring the rest of your digital life into NovaSafe." />
+        <Title
+          eyebrow="Vault unlocked"
+          title={`Welcome, ${name}.`}
+          sub="Your encrypted vault is live. Add your first credentials and bring the rest of your digital life into NovaSafe."
+        />
 
         <div className="mt-7 grid grid-cols-3 gap-2 w-full">
           {[
@@ -966,16 +1465,27 @@ function WelcomeScreen({ name, go }: { name: string; go: (s: Step) => void }) {
           ].map((s) => (
             <div key={s.l} className="rounded-xl border border-border bg-card p-3 shadow-xs">
               <div className="text-[20px] font-semibold text-foreground">{s.v}</div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">{s.l}</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
+                {s.l}
+              </div>
             </div>
           ))}
         </div>
 
         <div className="mt-6 w-full">
           <PrimaryButton loading={loading} onClick={() => run(() => go("login"), 800)}>
-            {loading ? "Opening vault…" : <><Sparkles className="h-4 w-4" /> Open my vault</>}
+            {loading ? (
+              "Opening vault…"
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" /> Open my vault
+              </>
+            )}
           </PrimaryButton>
-          <button onClick={() => go("login")} className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={() => go("login")}
+            className="mt-3 block w-full text-center text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+          >
             Take the 60-second tour
           </button>
         </div>
@@ -1004,17 +1514,23 @@ const ALL: { id: Step; label: string }[] = [
 function FlowMap({ step, go }: { step: Step; go: (s: Step) => void }) {
   return (
     <div className="mt-10 rounded-2xl border border-border bg-card p-3 shadow-xs">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2 px-1">Demo · jump to any screen</div>
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2 px-1">
+        Demo · jump to any screen
+      </div>
       <div className="flex flex-wrap gap-1.5">
         {ALL.map((s) => (
           <button
             key={s.id}
             onClick={() => go(s.id)}
             className={`px-2.5 h-7 rounded-md text-[11px] font-medium transition-all border
-              ${step === s.id
-                ? "bg-gradient-primary text-primary-foreground border-transparent shadow-cta"
-                : "bg-card border-border hover:border-border-strong text-muted-foreground hover:text-foreground"}`}
-          >{s.label}</button>
+              ${
+                step === s.id
+                  ? "bg-gradient-primary text-primary-foreground border-transparent shadow-cta"
+                  : "bg-card border-border hover:border-border-strong text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            {s.label}
+          </button>
         ))}
       </div>
     </div>

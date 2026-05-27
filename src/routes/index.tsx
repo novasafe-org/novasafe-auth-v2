@@ -1,12 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AuthFlow } from "@/components/novasafe/AuthFlow";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+import { AUTH_PATH } from "@/config";
+
+/**
+ * The bare auth domain has no UI of its own — visitors who land here are
+ * always trying to sign in. Send them straight to `/login` and forward any
+ * `next` / `ref` query parameters along.
+ */
 export const Route = createFileRoute("/")({
-  component: AuthFlow,
-  head: () => ({
-    meta: [
-      { title: "NovaSafe — Your digital vault" },
-      { name: "description", content: "NovaSafe is the AI-powered, zero-knowledge identity vault for the next decade of digital security." },
-    ],
-  }),
+  beforeLoad: ({ search }) => {
+    throw redirect({
+      to: AUTH_PATH.Login,
+      search: search as Record<string, string>,
+      replace: true,
+    });
+  },
 });
