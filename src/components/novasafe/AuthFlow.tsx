@@ -292,7 +292,7 @@ function LoginScreen({
       <div className="space-y-2">
         <SocialBtn icon="apple" label="Continue with Apple" />
         <SocialBtn icon="google" label="Continue with Google" />
-        <SocialBtn icon="passkey" label="Sign in with Passkey" />
+        {/* <SocialBtn icon="passkey" label="Sign in with Passkey" /> */}
       </div>
 
       <Divider label="or" />

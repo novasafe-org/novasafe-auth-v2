@@ -12,9 +12,11 @@ export {
 
 export {
   loginAction,
+  googleLoginAction,
   verifyTwoFactorAction,
   logoutAction,
   type LoginResult,
+  type GoogleLoginResult,
   type LogoutResult,
 } from "./server-actions";
 

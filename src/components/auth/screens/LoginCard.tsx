@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
 
-import { loginAction, type LoginResult } from "@/lib/auth";
+import { authConfig } from "@/config";
+import { loginAction, googleLoginAction, type LoginResult } from "@/lib/auth";
+import { requestGoogleIdToken } from "@/lib/auth/google";
 import {
   Divider,
   ErrorBanner,
@@ -24,6 +26,7 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -64,13 +67,50 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
     setError(result.message);
   }
 
+  async function continueWithGoogle() {
+    if (!authConfig.google.enabled || googleLoading) return;
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      const idToken = await requestGoogleIdToken(authConfig.google.webClientId);
+      const result = await googleLoginAction({ data: { idToken, next: next ?? null } });
+      if (result.status === "ok") {
+        window.location.assign(result.redirectTo);
+        return;
+      }
+      if (result.status === "otp-required") {
+        setError(
+          result.message ||
+            "This Google account still needs email verification. Please finish signup first.",
+        );
+        return;
+      }
+      setError(result.message);
+    } catch (err) {
+      console.error("[LoginCard] Google sign-in failed", err);
+      setError("Google sign-in was cancelled or unavailable. Try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <Section>
       <Title title="Sign in to NovaSafe" sub="Welcome back. Your vault is encrypted and waiting." />
 
       <div className="space-y-2">
-        <SocialPlaceholder icon={<KeyRound className="h-4 w-4" />} label="Continue with Google" />
-        <SocialPlaceholder icon={<KeyRound className="h-4 w-4" />} label="Sign in with Passkey" />
+        <button
+          type="button"
+          onClick={continueWithGoogle}
+          disabled={!authConfig.google.enabled || googleLoading || loading}
+          className="group w-full h-11 rounded-[10px] bg-card border border-border text-[13px] font-medium inline-flex items-center justify-center gap-2.5 shadow-xs disabled:opacity-60 disabled:cursor-not-allowed hover:bg-secondary transition-colors"
+        >
+          <span className="text-foreground">
+            <KeyRound className="h-4 w-4" />
+          </span>
+          {googleLoading ? "Connecting to Google..." : "Continue with Google"}
+        </button>
+        {/* <SocialPlaceholder icon={<KeyRound className="h-4 w-4" />} label="Sign in with Passkey" /> */}
       </div>
 
       <Divider label="or" />
@@ -134,19 +174,5 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
         </PrimaryButton>
       </form>
     </Section>
-  );
-}
-
-function SocialPlaceholder({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <button
-      type="button"
-      disabled
-      title="Coming in the next iteration"
-      className="group w-full h-11 rounded-[10px] bg-card border border-border opacity-60 cursor-not-allowed text-[13px] font-medium inline-flex items-center justify-center gap-2.5 shadow-xs"
-    >
-      <span className="text-foreground">{icon}</span>
-      {label}
-    </button>
   );
 }

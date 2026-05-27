@@ -43,6 +43,24 @@ export type LoginResult =
     };
 
 export type LogoutResult = { status: "ok" } | { status: "error"; message: string };
+export type GoogleLoginResult =
+  | {
+      status: "ok";
+      user: AuthUser;
+      redirectTo: string;
+    }
+  | {
+      status: "otp-required";
+      message: string;
+      provider?: "google" | "apple" | string;
+      intent?: string;
+    }
+  | {
+      status: "error";
+      message: string;
+      code?: string;
+      httpStatus?: number;
+    };
 
 /* ------------------------------------------------------------------------- */
 /* Validation                                                                */
@@ -51,6 +69,11 @@ export type LogoutResult = { status: "ok" } | { status: "error"; message: string
 const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email address"),
   password: z.string().min(1, "Password is required"),
+  next: z.string().url().optional().nullable(),
+});
+
+const googleLoginSchema = z.object({
+  idToken: z.string().min(1, "Google ID token is required"),
   next: z.string().url().optional().nullable(),
 });
 
@@ -172,6 +195,63 @@ export const verifyTwoFactorAction = createServerFn({ method: "POST" })
       };
     } catch (err) {
       return toApiErrorResult(err);
+    }
+  });
+
+/**
+ * Google OAuth sign-in for web.
+ *
+ * Browser obtains the Google ID token via GIS, server exchanges it with the
+ * core backend, then writes our HttpOnly session cookie (same as email login).
+ */
+export const googleLoginAction = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => googleLoginSchema.parse(input))
+  .handler(async ({ data }): Promise<GoogleLoginResult> => {
+    try {
+      const response = await authApi.loginWithGoogle({
+        idToken: data.idToken,
+      });
+
+      if (response.requiresOtpVerification || response.pendingOtpProvider) {
+        return {
+          status: "otp-required",
+          message:
+            response.message ??
+            "This Google account still needs email verification before you can continue.",
+          provider: response.authProvider,
+          intent: response.oauthIntent,
+        };
+      }
+
+      const token = response.accessToken ?? response.token;
+      if (!token || !response.user) {
+        return {
+          status: "error",
+          message: response.message ?? "Google sign-in failed. Please try again.",
+          code: response.code,
+        };
+      }
+
+      writeSessionCookie(token);
+      return {
+        status: "ok",
+        user: response.user,
+        redirectTo: resolvePostAuthRedirect(data.next ?? null),
+      };
+    } catch (err) {
+      if (err instanceof ApiError) {
+        return {
+          status: "error",
+          message: err.message,
+          code: err.code,
+          httpStatus: err.status,
+        };
+      }
+      console.error("[googleLoginAction] unexpected error", err);
+      return {
+        status: "error",
+        message: "Google sign-in failed. Please try again in a moment.",
+      };
     }
   });
 
