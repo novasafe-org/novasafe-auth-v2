@@ -123,9 +123,9 @@ jobs:
               exit 1
             fi
 
-            if [ ! -f auth.env ]; then
-              echo "auth.env not found — refusing to start without runtime env."
-              echo "Copy auth.env.example to auth.env on the host before retrying."
+            if [ ! -f .env ]; then
+              echo ".env not found — refusing to start without runtime env."
+              echo "Copy .env.example to .env on the host before retrying."
               exit 1
             fi
 
