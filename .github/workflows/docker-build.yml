@@ -65,15 +65,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            VITE_AUTH_URL=${{ secrets.VITE_AUTH_URL }}
-            VITE_APP_URL=${{ secrets.VITE_APP_URL }}
-            VITE_LANDING_URL=${{ secrets.VITE_LANDING_URL }}
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_AUTH_URL=${{ secrets.VITE_AUTH_URL || 'https://start.novasafe.io' }}
+            VITE_APP_URL=${{ secrets.VITE_APP_URL || 'https://app.novasafe.io' }}
+            VITE_LANDING_URL=${{ secrets.VITE_LANDING_URL || 'https://novasafe.io' }}
+            VITE_API_URL=${{ secrets.VITE_API_URL || 'https://api.novasafe.io' }}
             VITE_GOOGLE_WEB_CLIENT_ID=${{ secrets.VITE_GOOGLE_WEB_CLIENT_ID }}
             VITE_REVENUECAT_PUBLIC_API_KEY_WEB=${{ secrets.VITE_REVENUECAT_PUBLIC_API_KEY_WEB }}
-            VITE_REVENUECAT_ENTITLEMENT_PRO=${{ secrets.VITE_REVENUECAT_ENTITLEMENT_PRO }}
-            VITE_REVENUECAT_PACKAGE_MONTHLY=${{ secrets.VITE_REVENUECAT_PACKAGE_MONTHLY }}
-            VITE_REVENUECAT_PACKAGE_YEARLY=${{ secrets.VITE_REVENUECAT_PACKAGE_YEARLY }}
+            VITE_REVENUECAT_ENTITLEMENT_PRO=${{ secrets.VITE_REVENUECAT_ENTITLEMENT_PRO || 'pro' }}
+            VITE_REVENUECAT_PACKAGE_MONTHLY=${{ secrets.VITE_REVENUECAT_PACKAGE_MONTHLY || '$rc_monthly' }}
+            VITE_REVENUECAT_PACKAGE_YEARLY=${{ secrets.VITE_REVENUECAT_PACKAGE_YEARLY || '$rc_annual' }}
             VITE_APP_VERSION=${{ github.sha }}
 
   deploy:

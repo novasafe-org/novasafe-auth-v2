@@ -84,6 +84,21 @@ const positiveInt = (fallback: number) =>
 
 const url = z.string().url("must be a fully-qualified URL (http(s)://…)");
 
+/**
+ * Production-safe fallback URLs.
+ *
+ * Why this exists:
+ * CI can pass empty `VITE_*` build args when repository secrets are unset.
+ * Those empty values get baked into `import.meta.env` and previously caused
+ * a hard startup crash before the login screen could run.
+ */
+const DEFAULT_PUBLIC_URLS = Object.freeze({
+  AUTH_URL: "https://start.novasafe.io",
+  LANDING_URL: "https://novasafe.io",
+  APP_URL: "https://app.novasafe.io",
+  API_URL: "https://api.novasafe.io",
+});
+
 /* ------------------------------------------------------------------------- */
 /* Schema                                                                    */
 /* ------------------------------------------------------------------------- */
@@ -106,10 +121,10 @@ const PublicEnvSchema = z.object({
 const rawPublic = {
   NODE_ENV: readEnv("NODE_ENV", "MODE"),
   PORT: readEnv("PORT", "VITE_PORT"),
-  AUTH_URL: readEnv("VITE_AUTH_URL", "AUTH_URL"),
-  LANDING_URL: readEnv("VITE_LANDING_URL", "LANDING_URL"),
-  APP_URL: readEnv("VITE_APP_URL", "APP_URL"),
-  API_URL: readEnv("VITE_API_URL", "API_URL"),
+  AUTH_URL: readEnv("VITE_AUTH_URL", "AUTH_URL") ?? DEFAULT_PUBLIC_URLS.AUTH_URL,
+  LANDING_URL: readEnv("VITE_LANDING_URL", "LANDING_URL") ?? DEFAULT_PUBLIC_URLS.LANDING_URL,
+  APP_URL: readEnv("VITE_APP_URL", "APP_URL") ?? DEFAULT_PUBLIC_URLS.APP_URL,
+  API_URL: readEnv("VITE_API_URL", "API_URL") ?? DEFAULT_PUBLIC_URLS.API_URL,
   GOOGLE_WEB_CLIENT_ID: readEnv("VITE_GOOGLE_WEB_CLIENT_ID"),
   REVENUECAT_PUBLIC_API_KEY_WEB: readEnv("VITE_REVENUECAT_PUBLIC_API_KEY_WEB"),
   REVENUECAT_ENTITLEMENT_PRO: readEnv("VITE_REVENUECAT_ENTITLEMENT_PRO"),
