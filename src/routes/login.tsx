@@ -21,6 +21,7 @@ const loginSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/login")({
+  ssr: false,
   validateSearch: (search) => loginSearchSchema.parse(search),
   head: () => ({
     meta: [
