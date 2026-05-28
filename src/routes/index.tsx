@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { AUTH_PATH } from "@/config";
+import { redirectIfAuthenticatedAction } from "@/lib/auth/server-actions";
 
 /**
  * The bare auth domain has no UI of its own — visitors who land here are
@@ -8,7 +9,11 @@ import { AUTH_PATH } from "@/config";
  * `next` / `ref` query parameters along.
  */
 export const Route = createFileRoute("/")({
-  beforeLoad: ({ search }) => {
+  beforeLoad: async ({ search }) => {
+    const { redirectTo } = await redirectIfAuthenticatedAction();
+    if (redirectTo) {
+      throw redirect({ href: redirectTo, replace: true });
+    }
     throw redirect({
       to: AUTH_PATH.Login,
       search: search as Record<string, string>,

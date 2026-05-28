@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { ApiError, authApi, type AuthUser } from "@/lib/api";
-import { resolvePostAuthRedirect } from "@/config";
+import { buildAppUrl, resolvePostAuthRedirect } from "@/config";
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from "./session.server";
 
 /**
@@ -254,6 +254,33 @@ export const googleLoginAction = createServerFn({ method: "POST" })
       };
     }
   });
+
+/**
+ * Used by guest-only auth routes. If a valid session cookie exists, return
+ * where the browser should go instead of showing login/signup again.
+ */
+export const redirectIfAuthenticatedAction = createServerFn({ method: "POST" }).handler(
+  async (): Promise<{ redirectTo: string | null }> => {
+    const token = readSessionToken();
+    if (!token) return { redirectTo: null };
+
+    try {
+      const response = await authApi.validateSession(token);
+      if (
+        response.success &&
+        response.user &&
+        !response.pendingOtpProvider &&
+        !response.pendingNovaSafeEmailVerification
+      ) {
+        return { redirectTo: buildAppUrl({ path: "/vault" }) };
+      }
+    } catch {
+      /* treat as guest */
+    }
+
+    return { redirectTo: null };
+  },
+);
 
 /**
  * Best-effort logout: tells the backend to revoke the session, then clears

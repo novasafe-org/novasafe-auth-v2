@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+import { rejectAuthenticatedVisitors } from "@/lib/auth/guest-guard";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { LoginCard } from "@/components/auth/screens/LoginCard";
 import { TwoFactorCard } from "@/components/auth/screens/TwoFactorCard";
@@ -22,6 +23,7 @@ const loginSearchSchema = z.object({
 
 export const Route = createFileRoute("/login")({
   ssr: false,
+  beforeLoad: () => rejectAuthenticatedVisitors(),
   validateSearch: (search) => loginSearchSchema.parse(search),
   head: () => ({
     meta: [

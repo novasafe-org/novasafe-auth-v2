@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+import { rejectAuthenticatedVisitors } from "@/lib/auth/guest-guard";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SignupCard, type SignupSuccess } from "@/components/auth/screens/SignupCard";
 import { WelcomeCard } from "@/components/auth/screens/WelcomeCard";
@@ -43,6 +44,7 @@ const signupProSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/signup/pro")({
+  beforeLoad: () => rejectAuthenticatedVisitors(),
   validateSearch: (search) => signupProSearchSchema.parse(search),
   head: () => ({
     meta: [

@@ -64,11 +64,11 @@ export function PasswordStep({ email, onBack, onSubmit, error }: PasswordStepPro
       <Field
         label="Master password"
         htmlFor="signup-password"
-        hint={
-          <span className="inline-flex items-center gap-1">
-            <Sparkles className="h-3 w-3" /> AI-evaluated
-          </span>
-        }
+        // hint={
+        //   <span className="inline-flex items-center gap-1">
+        //     <Sparkles className="h-3 w-3" /> AI-evaluated
+        //   </span>
+        // }
       >
         <div className="relative">
           <Input

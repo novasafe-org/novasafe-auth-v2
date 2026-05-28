@@ -810,11 +810,11 @@ function SignupScreen({
         >
           <Field
             label="Master password"
-            hint={
-              <span className="inline-flex items-center gap-1">
-                <Sparkles className="h-3 w-3" /> AI-evaluated
-              </span>
-            }
+            // hint={
+            //   <span className="inline-flex items-center gap-1">
+            //     <Sparkles className="h-3 w-3" /> AI-evaluated
+            //   </span>
+            // }
           >
             <div className="relative">
               <Input

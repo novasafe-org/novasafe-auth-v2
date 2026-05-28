@@ -1,5 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+import { rejectAuthenticatedVisitors } from "@/lib/auth/guest-guard";
+
 /**
  * `/signup` parent layout.
  *
@@ -16,6 +18,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/signup")({
   ssr: false,
+  beforeLoad: () => rejectAuthenticatedVisitors(),
   component: SignupLayoutRoute,
 });
 

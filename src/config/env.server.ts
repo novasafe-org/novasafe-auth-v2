@@ -44,7 +44,8 @@ const ServerEnvSchema = z.object({
   AUTH_COOKIE_DOMAIN: z.string().default(""),
   AUTH_COOKIE_SECURE: boolFlag,
   AUTH_COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).default("lax"),
-  AUTH_COOKIE_MAX_AGE: positiveInt(60 * 60 * 24 * 7),
+  /** Web sessions expire after 30 minutes (override via AUTH_COOKIE_MAX_AGE). */
+  AUTH_COOKIE_MAX_AGE: positiveInt(60 * 30),
   AUTH_COOKIE_PATH: z.string().min(1).default("/"),
 });
 
