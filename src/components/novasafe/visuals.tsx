@@ -12,13 +12,20 @@ import {
   Moon,
   Check,
 } from "lucide-react";
+import { appConfig } from "@/config";
+
+const LANDING_LOGO_URL = `${appConfig.urls.landing}/logo.svg`;
 
 /* ---------- Logo ---------- */
 export function NovaLogo({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
       <div className="relative h-8 w-8 rounded-[10px] bg-gradient-primary shadow-cta flex items-center justify-center">
-        <Shield className="h-4 w-4 text-primary-foreground" strokeWidth={2.4} />
+        <img
+          src={LANDING_LOGO_URL}
+          alt="NovaSafe"
+          className="h-4 w-4 object-contain"
+        />
       </div>
       {!compact && (
         <div className="leading-none">
