@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { ApiError, authApi } from "@/lib/api";
 import { buildLoginUrl } from "@/config";
+import { extensionPairingLog } from "./extension-pairing.constants";
 import { readSessionToken } from "./session.server";
 
 const pairSchema = z.object({
@@ -29,7 +30,7 @@ const isAllowedExtensionRedirect = (redirectUri: string): boolean => {
 };
 
 export type ExtensionPairResult =
-  | { status: "redirect"; redirectTo: string }
+  | { status: "success"; extensionRedirectTo: string }
   | { status: "error"; message: string; code?: string };
 
 /**
@@ -39,6 +40,8 @@ export type ExtensionPairResult =
 export const completeExtensionPairingAction = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => pairSchema.parse(data))
   .handler(async ({ data }): Promise<ExtensionPairResult> => {
+    extensionPairingLog("Pairing Started", { installId: data.installId.slice(0, 8) });
+
     if (!isAllowedExtensionRedirect(data.redirectUri)) {
       return { status: "error", message: "Invalid extension redirect URI." };
     }
@@ -85,7 +88,10 @@ export const completeExtensionPairingAction = createServerFn({ method: "POST" })
       });
       redirectUrl.hash = hash.toString();
 
-      return { status: "redirect", redirectTo: redirectUrl.toString() };
+      extensionPairingLog("Token Received", { redirectHost: redirectUrl.hostname });
+      extensionPairingLog("Pairing Completed");
+
+      return { status: "success", extensionRedirectTo: redirectUrl.toString() };
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.isUnauthorized()) {

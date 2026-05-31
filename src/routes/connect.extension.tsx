@@ -9,6 +9,10 @@ import {
   completeExtensionPairingAction,
   requireAuthenticatedForPairingAction,
 } from "@/lib/auth/extension-pairing-actions";
+import {
+  EXTENSION_PAIRING_REDIRECT_KEY,
+  extensionPairingLog,
+} from "@/lib/auth/extension-pairing.constants";
 
 const connectSearchSchema = z.object({
   installId: z.string().min(1),
@@ -62,6 +66,7 @@ function ConnectExtensionRoute() {
   const onConnect = async () => {
     setBusy(true);
     setError(null);
+    extensionPairingLog("Pairing Started", { installId: search.installId.slice(0, 8) });
     try {
       const result = await completeExtensionPairingAction({
         data: {
@@ -74,13 +79,29 @@ function ConnectExtensionRoute() {
           extensionVersion: search.extensionVersion,
         },
       });
-      if (result.status === "redirect") {
-        window.location.replace(result.redirectTo);
+      if (result.status === "success") {
+        sessionStorage.setItem(EXTENSION_PAIRING_REDIRECT_KEY, result.extensionRedirectTo);
+        extensionPairingLog("Token Received");
+        window.location.replace("/connect/extension/success");
         return;
       }
-      setError(result.message);
+      const failureUrl = new URL("/connect/extension/failure", window.location.origin);
+      failureUrl.searchParams.set("message", result.message);
+      if (result.code) failureUrl.searchParams.set("code", result.code);
+      failureUrl.searchParams.set("installId", search.installId);
+      failureUrl.searchParams.set("redirect_uri", search.redirect_uri);
+      failureUrl.searchParams.set("state", search.state);
+      extensionPairingLog("Failure Redirect", { code: result.code });
+      window.location.replace(failureUrl.toString());
+      return;
     } catch {
-      setError("Could not connect the extension. Try again.");
+      const failureUrl = new URL("/connect/extension/failure", window.location.origin);
+      failureUrl.searchParams.set("message", "Could not connect the extension. Try again.");
+      failureUrl.searchParams.set("code", "unexpected");
+      failureUrl.searchParams.set("installId", search.installId);
+      failureUrl.searchParams.set("redirect_uri", search.redirect_uri);
+      failureUrl.searchParams.set("state", search.state);
+      window.location.replace(failureUrl.toString());
     } finally {
       setBusy(false);
     }

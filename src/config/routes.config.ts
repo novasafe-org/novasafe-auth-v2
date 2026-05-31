@@ -94,7 +94,10 @@ export function resolvePostAuthRedirect(nextRaw: string | null | undefined): str
     }
 
     // Extension pairing must return to the auth connect screen after login.
-    if (candidate.origin === authTarget.origin && candidate.pathname === "/connect/extension") {
+    if (
+      candidate.origin === authTarget.origin &&
+      (candidate.pathname === "/connect/extension" || candidate.pathname.startsWith("/connect/extension/"))
+    ) {
       return candidate.toString();
     }
   } catch {

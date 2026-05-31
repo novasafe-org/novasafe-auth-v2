@@ -15,6 +15,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupIndexRouteImport } from './routes/signup.index'
 import { Route as SignupProRouteImport } from './routes/signup.pro'
 import { Route as ConnectExtensionRouteImport } from './routes/connect.extension'
+import { Route as ConnectExtensionSuccessRouteImport } from './routes/connect.extension.success'
+import { Route as ConnectExtensionFailureRouteImport } from './routes/connect.extension.failure'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -46,30 +48,46 @@ const ConnectExtensionRoute = ConnectExtensionRouteImport.update({
   path: '/connect/extension',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConnectExtensionSuccessRoute = ConnectExtensionSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => ConnectExtensionRoute,
+} as any)
+const ConnectExtensionFailureRoute = ConnectExtensionFailureRouteImport.update({
+  id: '/failure',
+  path: '/failure',
+  getParentRoute: () => ConnectExtensionRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRouteWithChildren
-  '/connect/extension': typeof ConnectExtensionRoute
+  '/connect/extension': typeof ConnectExtensionRouteWithChildren
   '/signup/pro': typeof SignupProRoute
   '/signup/': typeof SignupIndexRoute
+  '/connect/extension/failure': typeof ConnectExtensionFailureRoute
+  '/connect/extension/success': typeof ConnectExtensionSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/connect/extension': typeof ConnectExtensionRoute
+  '/connect/extension': typeof ConnectExtensionRouteWithChildren
   '/signup/pro': typeof SignupProRoute
   '/signup': typeof SignupIndexRoute
+  '/connect/extension/failure': typeof ConnectExtensionFailureRoute
+  '/connect/extension/success': typeof ConnectExtensionSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRouteWithChildren
-  '/connect/extension': typeof ConnectExtensionRoute
+  '/connect/extension': typeof ConnectExtensionRouteWithChildren
   '/signup/pro': typeof SignupProRoute
   '/signup/': typeof SignupIndexRoute
+  '/connect/extension/failure': typeof ConnectExtensionFailureRoute
+  '/connect/extension/success': typeof ConnectExtensionSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -80,8 +98,17 @@ export interface FileRouteTypes {
     | '/connect/extension'
     | '/signup/pro'
     | '/signup/'
+    | '/connect/extension/failure'
+    | '/connect/extension/success'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/connect/extension' | '/signup/pro' | '/signup'
+  to:
+    | '/'
+    | '/login'
+    | '/connect/extension'
+    | '/signup/pro'
+    | '/signup'
+    | '/connect/extension/failure'
+    | '/connect/extension/success'
   id:
     | '__root__'
     | '/'
@@ -90,13 +117,15 @@ export interface FileRouteTypes {
     | '/connect/extension'
     | '/signup/pro'
     | '/signup/'
+    | '/connect/extension/failure'
+    | '/connect/extension/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRouteWithChildren
-  ConnectExtensionRoute: typeof ConnectExtensionRoute
+  ConnectExtensionRoute: typeof ConnectExtensionRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -143,6 +172,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConnectExtensionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/connect/extension/success': {
+      id: '/connect/extension/success'
+      path: '/success'
+      fullPath: '/connect/extension/success'
+      preLoaderRoute: typeof ConnectExtensionSuccessRouteImport
+      parentRoute: typeof ConnectExtensionRoute
+    }
+    '/connect/extension/failure': {
+      id: '/connect/extension/failure'
+      path: '/failure'
+      fullPath: '/connect/extension/failure'
+      preLoaderRoute: typeof ConnectExtensionFailureRouteImport
+      parentRoute: typeof ConnectExtensionRoute
+    }
   }
 }
 
@@ -159,11 +202,24 @@ const SignupRouteChildren: SignupRouteChildren = {
 const SignupRouteWithChildren =
   SignupRoute._addFileChildren(SignupRouteChildren)
 
+interface ConnectExtensionRouteChildren {
+  ConnectExtensionFailureRoute: typeof ConnectExtensionFailureRoute
+  ConnectExtensionSuccessRoute: typeof ConnectExtensionSuccessRoute
+}
+
+const ConnectExtensionRouteChildren: ConnectExtensionRouteChildren = {
+  ConnectExtensionFailureRoute: ConnectExtensionFailureRoute,
+  ConnectExtensionSuccessRoute: ConnectExtensionSuccessRoute,
+}
+
+const ConnectExtensionRouteWithChildren =
+  ConnectExtensionRoute._addFileChildren(ConnectExtensionRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRouteWithChildren,
-  ConnectExtensionRoute: ConnectExtensionRoute,
+  ConnectExtensionRoute: ConnectExtensionRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
