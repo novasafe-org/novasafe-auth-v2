@@ -86,8 +86,15 @@ export function resolvePostAuthRedirect(nextRaw: string | null | undefined): str
   if (!nextRaw) return buildAppUrl();
   try {
     const candidate = new URL(nextRaw);
-    const target = new URL(appConfig.urls.app);
-    if (candidate.origin === target.origin) {
+    const appTarget = new URL(appConfig.urls.app);
+    const authTarget = new URL(appConfig.urls.auth);
+
+    if (candidate.origin === appTarget.origin) {
+      return candidate.toString();
+    }
+
+    // Extension pairing must return to the auth connect screen after login.
+    if (candidate.origin === authTarget.origin && candidate.pathname === "/connect/extension") {
       return candidate.toString();
     }
   } catch {

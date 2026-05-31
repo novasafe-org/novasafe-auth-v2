@@ -33,6 +33,11 @@ export interface DeviceContext {
   deviceOsVersion?: string;
 }
 
+export interface ExtensionPairPayload extends DeviceContext {
+  installationId: string;
+  extensionVersion?: string;
+}
+
 /* ------------------------------------------------------------------------- */
 /* Login                                                                     */
 /* ------------------------------------------------------------------------- */
@@ -158,6 +163,19 @@ export const authApi = {
     return apiFetch<ValidateSessionResponse>(`${PREFIX}/validate-session`, {
       method: "GET",
       token,
+    });
+  },
+
+  pairExtension(payload: ExtensionPairPayload, webSessionToken: string) {
+    return apiFetch<LoginResponse>(`${PREFIX}/extension/pair`, {
+      method: "POST",
+      body: payload,
+      token: webSessionToken,
+      headers: {
+        "X-Source": "BROWSER_EXTENSION",
+        "X-Client-Source": "BROWSER_EXTENSION",
+        "X-Client-Platform": "extension",
+      },
     });
   },
 
