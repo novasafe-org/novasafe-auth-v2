@@ -1,7 +1,9 @@
 import { AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
 
 import { PrimaryButton, Section, Title } from "@/components/auth/primitives";
-import { buildAppUrl, buildLoginUrl } from "@/config";
+import { buildAppUrl, buildLoginUrl, buildSignupProUrl } from "@/config";
+
+const DEVICE_LIMIT_CODE = "NOVASAFE_DEVICE_LIMIT";
 
 interface ExtensionPairingFailureCardProps {
   message: string;
@@ -16,7 +18,13 @@ export function ExtensionPairingFailureCard({
   retryHref,
   timedOut,
 }: ExtensionPairingFailureCardProps) {
-  const title = timedOut ? "Unable to connect extension" : "Pairing failed";
+  const isDeviceLimit = code === DEVICE_LIMIT_CODE;
+  const title = timedOut
+    ? "Unable to connect extension"
+    : isDeviceLimit
+      ? "Device limit reached"
+      : "Pairing failed";
+  const showRetry = Boolean(retryHref) && !isDeviceLimit;
 
   return (
     <Section>
@@ -35,8 +43,14 @@ export function ExtensionPairingFailureCard({
       ) : null}
 
       <div className="space-y-3">
-        {retryHref ? (
-          <PrimaryButton type="button" onClick={() => window.location.assign(retryHref)}>
+        {isDeviceLimit ? (
+          <PrimaryButton type="button" onClick={() => window.location.assign(buildSignupProUrl())}>
+            Upgrade to NovaSafe Pro
+          </PrimaryButton>
+        ) : null}
+
+        {showRetry ? (
+          <PrimaryButton type="button" onClick={() => window.location.assign(retryHref!)}>
             <RefreshCw className="h-4 w-4" /> Retry pairing
           </PrimaryButton>
         ) : null}
