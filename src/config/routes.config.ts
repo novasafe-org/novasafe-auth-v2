@@ -1,5 +1,6 @@
 import { appConfig } from "./app.config";
 import { AUTH_PATH, authConfig, type AuthPath } from "./auth.config";
+import { extensionPairingLog } from "@/lib/auth/extension-pairing.constants";
 
 /**
  * URL builders for cross-subdomain navigation.
@@ -98,6 +99,12 @@ export function resolvePostAuthRedirect(nextRaw: string | null | undefined): str
       candidate.origin === authTarget.origin &&
       (candidate.pathname === "/connect/extension" || candidate.pathname.startsWith("/connect/extension/"))
     ) {
+      extensionPairingLog("Post-auth redirect to extension pairing", {
+        pathname: candidate.pathname,
+        hasInstallId: candidate.searchParams.has("installId"),
+        hasRedirectUri: candidate.searchParams.has("redirect_uri"),
+        hasState: candidate.searchParams.has("state"),
+      });
       return candidate.toString();
     }
   } catch {

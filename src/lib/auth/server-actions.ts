@@ -259,8 +259,15 @@ export const googleLoginAction = createServerFn({ method: "POST" })
  * Used by guest-only auth routes. If a valid session cookie exists, return
  * where the browser should go instead of showing login/signup again.
  */
-export const redirectIfAuthenticatedAction = createServerFn({ method: "POST" }).handler(
-  async (): Promise<{ redirectTo: string | null }> => {
+export const redirectIfAuthenticatedAction = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        next: z.string().url().optional().nullable(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data }): Promise<{ redirectTo: string | null }> => {
     const token = readSessionToken();
     if (!token) return { redirectTo: null };
 
@@ -272,6 +279,9 @@ export const redirectIfAuthenticatedAction = createServerFn({ method: "POST" }).
         !response.pendingOtpProvider &&
         !response.pendingNovaSafeEmailVerification
       ) {
+        if (data.next) {
+          return { redirectTo: resolvePostAuthRedirect(data.next) };
+        }
         return { redirectTo: buildAppUrl({ path: "/vault" }) };
       }
     } catch {
@@ -279,8 +289,7 @@ export const redirectIfAuthenticatedAction = createServerFn({ method: "POST" }).
     }
 
     return { redirectTo: null };
-  },
-);
+  });
 
 /**
  * Best-effort logout: tells the backend to revoke the session, then clears

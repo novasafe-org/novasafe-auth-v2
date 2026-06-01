@@ -5,6 +5,9 @@ import { z } from "zod";
 import { ApiError, authApi } from "@/lib/api";
 import { buildLoginUrl } from "@/config";
 import { extensionPairingLog } from "./extension-pairing.constants";
+import {
+  buildConnectExtensionReturnUrl,
+} from "./extension-pairing-context";
 import { readSessionToken } from "./session.server";
 
 const pairSchema = z.object({
@@ -48,13 +51,17 @@ export const completeExtensionPairingAction = createServerFn({ method: "POST" })
 
     const webToken = await readSessionToken();
     if (!webToken) {
+      const returnUrl = buildConnectExtensionReturnUrl({
+        installId: data.installId,
+        redirect_uri: data.redirectUri,
+        state: data.state,
+        browser: data.browser,
+        browserVersion: data.browserVersion,
+        platform: data.platform,
+        extensionVersion: data.extensionVersion,
+      });
       throw redirect({
-        href: buildLoginUrl({
-          next: undefined,
-          query: {
-            next: `/connect/extension?installId=${encodeURIComponent(data.installId)}&redirect_uri=${encodeURIComponent(data.redirectUri)}&state=${encodeURIComponent(data.state)}`,
-          },
-        }),
+        href: buildLoginUrl({ next: returnUrl }),
         replace: true,
       });
     }

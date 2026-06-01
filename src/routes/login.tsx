@@ -23,7 +23,7 @@ const loginSearchSchema = z.object({
 
 export const Route = createFileRoute("/login")({
   ssr: false,
-  beforeLoad: () => rejectAuthenticatedVisitors(),
+  beforeLoad: ({ search }) => rejectAuthenticatedVisitors(search.next),
   validateSearch: (search) => loginSearchSchema.parse(search),
   head: () => ({
     meta: [

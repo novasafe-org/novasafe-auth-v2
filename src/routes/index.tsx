@@ -10,7 +10,7 @@ import { redirectIfAuthenticatedAction } from "@/lib/auth/server-actions";
  */
 export const Route = createFileRoute("/")({
   beforeLoad: async ({ search }) => {
-    const { redirectTo } = await redirectIfAuthenticatedAction();
+    const { redirectTo } = await redirectIfAuthenticatedAction({ data: {} });
     if (redirectTo) {
       throw redirect({ href: redirectTo, replace: true });
     }

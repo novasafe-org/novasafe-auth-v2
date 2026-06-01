@@ -4,6 +4,10 @@ import { z } from "zod";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { ExtensionPairingFailureCard } from "@/components/auth/screens/ExtensionPairingFailureCard";
 import { extensionPairingLog } from "@/lib/auth/extension-pairing.constants";
+import {
+  buildConnectExtensionReturnUrl,
+  restoreExtensionPairingContext,
+} from "@/lib/auth/extension-pairing-context";
 
 const failureSearchSchema = z.object({
   message: z.string().default("Could not connect the extension. Please try again."),
@@ -16,13 +20,13 @@ const failureSearchSchema = z.object({
 
 export const Route = createFileRoute("/connect/extension/failure")({
   ssr: false,
-  validateSearch: (search) => failureSearchSchema.parse(search),
-  head: ({ search }) => ({
+  validateSearch: (search) => failureSearchSchema.parse(search ?? {}),
+  head: () => ({
     meta: [
       { title: "Extension Pairing Failed — NovaSafe" },
       {
         name: "description",
-        content: search.message,
+        content: "Could not connect the NovaSafe browser extension. Please try again.",
       },
     ],
   }),
@@ -34,10 +38,17 @@ function ConnectExtensionFailureRoute() {
 
   extensionPairingLog("Failure Redirect", { code: search.code, message: search.message });
 
-  const retryHref =
-    search.installId && search.redirect_uri && search.state
-      ? `/connect/extension?installId=${encodeURIComponent(search.installId)}&redirect_uri=${encodeURIComponent(search.redirect_uri)}&state=${encodeURIComponent(search.state)}`
-      : undefined;
+  const retryHref = (() => {
+    if (search.installId && search.redirect_uri && search.state) {
+      return buildConnectExtensionReturnUrl({
+        installId: search.installId,
+        redirect_uri: search.redirect_uri,
+        state: search.state,
+      });
+    }
+    const restored = restoreExtensionPairingContext();
+    return restored ? buildConnectExtensionReturnUrl(restored) : undefined;
+  })();
 
   return (
     <AuthShell

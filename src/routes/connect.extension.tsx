@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShieldCheck, Puzzle, Loader2, AlertCircle } from "lucide-react";
 
 import { AuthShell } from "@/components/auth/AuthShell";
-import { appConfig, buildLoginUrl } from "@/config";
+import { ExtensionPairingExpiredCard } from "@/components/auth/screens/ExtensionPairingExpiredCard";
+import { buildLoginUrl } from "@/config";
 import {
   completeExtensionPairingAction,
   requireAuthenticatedForPairingAction,
@@ -13,33 +13,45 @@ import {
   EXTENSION_PAIRING_REDIRECT_KEY,
   extensionPairingLog,
 } from "@/lib/auth/extension-pairing.constants";
+import {
+  buildConnectExtensionReturnUrl,
+  clearExtensionPairingContext,
+  maskPairingContext,
+  persistExtensionPairingContext,
+  resolveExtensionPairingSearch,
+  syncConnectExtensionUrl,
+  type ExtensionPairingSearch,
+} from "@/lib/auth/extension-pairing-context";
 
-const connectSearchSchema = z.object({
-  installId: z.string().min(1),
-  redirect_uri: z.string().url(),
-  state: z.string().min(8),
-  browser: z.string().optional(),
-  browserVersion: z.string().optional(),
-  platform: z.string().optional(),
-  extensionVersion: z.string().optional(),
-});
+export type ConnectExtensionSearch =
+  | ExtensionPairingSearch
+  | { pairingSessionExpired: true };
+
+const isValidPairingSearch = (
+  search: ConnectExtensionSearch,
+): search is ExtensionPairingSearch => !("pairingSessionExpired" in search);
 
 export const Route = createFileRoute("/connect/extension")({
   ssr: false,
-  validateSearch: (search) => connectSearchSchema.parse(search),
+  validateSearch: (search): ConnectExtensionSearch => {
+    const resolved = resolveExtensionPairingSearch(search as Record<string, unknown>);
+    if (resolved.ok) return resolved.params;
+    return { pairingSessionExpired: true };
+  },
   beforeLoad: async ({ search }) => {
+    if (!isValidPairingSearch(search)) return;
+
+    persistExtensionPairingContext(search);
+
     const gate = await requireAuthenticatedForPairingAction();
     if (!gate.authenticated) {
-      const returnUrl = new URL("/connect/extension", appConfig.urls.auth);
-      returnUrl.searchParams.set("installId", search.installId);
-      returnUrl.searchParams.set("redirect_uri", search.redirect_uri);
-      returnUrl.searchParams.set("state", search.state);
-      if (search.browser) returnUrl.searchParams.set("browser", search.browser);
-      if (search.browserVersion) returnUrl.searchParams.set("browserVersion", search.browserVersion);
-      if (search.platform) returnUrl.searchParams.set("platform", search.platform);
-      if (search.extensionVersion) returnUrl.searchParams.set("extensionVersion", search.extensionVersion);
+      const returnUrl = buildConnectExtensionReturnUrl(search);
+      extensionPairingLog("Redirect to login", {
+        returnPath: "/connect/extension",
+        ...maskPairingContext(search),
+      });
       throw redirect({
-        href: buildLoginUrl({ next: returnUrl.toString() }),
+        href: buildLoginUrl({ next: returnUrl }),
         replace: true,
       });
     }
@@ -58,6 +70,35 @@ export const Route = createFileRoute("/connect/extension")({
 
 function ConnectExtensionRoute() {
   const search = Route.useSearch();
+
+  useEffect(() => {
+    if (!isValidPairingSearch(search)) return;
+    syncConnectExtensionUrl(search);
+  }, [search]);
+
+  if (!isValidPairingSearch(search)) {
+    return (
+      <AuthShell
+        kicker="Browser extension"
+        headline="Connect NovaSafe to your browser."
+        topBarAction={
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <Puzzle className="h-3.5 w-3.5" />
+            <span>Secure pairing</span>
+          </div>
+        }
+      >
+        <div className="mx-auto w-full max-w-[420px] rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <ExtensionPairingExpiredCard />
+        </div>
+      </AuthShell>
+    );
+  }
+
+  return <ConnectExtensionPanel search={search} />;
+}
+
+function ConnectExtensionPanel({ search }: { search: ExtensionPairingSearch }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +107,7 @@ function ConnectExtensionRoute() {
   const onConnect = async () => {
     setBusy(true);
     setError(null);
-    extensionPairingLog("Pairing Started", { installId: search.installId.slice(0, 8) });
+    extensionPairingLog("Pairing Started", maskPairingContext(search));
     try {
       const result = await completeExtensionPairingAction({
         data: {
@@ -81,7 +122,10 @@ function ConnectExtensionRoute() {
       });
       if (result.status === "success") {
         sessionStorage.setItem(EXTENSION_PAIRING_REDIRECT_KEY, result.extensionRedirectTo);
-        extensionPairingLog("Token Received");
+        clearExtensionPairingContext();
+        extensionPairingLog("Token Received", {
+          callbackHost: new URL(result.extensionRedirectTo).hostname,
+        });
         window.location.replace("/connect/extension/success");
         return;
       }
