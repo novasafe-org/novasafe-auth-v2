@@ -269,16 +269,16 @@ function resolvePackage(
 function formatYearlyAsMonthly(
   price: import("@revenuecat/purchases-js").Price | undefined,
 ): string | undefined {
-  if (!price) return undefined;
+  if (!price?.currency) return undefined;
   const amount = typeof price.amountMicros === "number" ? price.amountMicros / 12_000_000 : null;
   if (amount === null || !Number.isFinite(amount)) return undefined;
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
-      currency: price.currency || "USD",
+      currency: price.currency,
     }).format(amount);
   } catch {
-    return `${amount.toFixed(2)} ${price.currency ?? ""}`.trim();
+    return undefined;
   }
 }
 

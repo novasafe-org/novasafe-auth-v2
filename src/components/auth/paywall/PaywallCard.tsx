@@ -12,6 +12,7 @@ import {
 import { ErrorBanner, GhostButton, PrimaryButton, Title } from "@/components/auth/primitives";
 import { PlanToggle } from "./PlanToggle";
 import { PlanCard } from "./PlanCard";
+import { PlanComparison } from "./PlanComparison";
 
 const PRO_FEATURES = [
   "Unlimited passwords, secure notes & cards",
@@ -205,6 +206,8 @@ export function PaywallCard({
         title="Unlock the full NovaSafe vault."
         sub="Encrypted everywhere, syncing everywhere — and supporting an indie team that builds in public."
       />
+
+      <PlanComparison />
 
       <div className="flex flex-col items-start gap-3">
         <PlanToggle
