@@ -13,6 +13,9 @@ export const AUTH_PATH = {
   Login: "/login",
   Signup: "/signup",
   SignupPro: "/signup/pro",
+  /** Primary authenticated checkout route. */
+  Pro: "/pro",
+  /** Legacy alias — redirects to `/pro`. */
   Upgrade: "/upgrade",
   BillingManage: "/billing/manage",
 } as const;

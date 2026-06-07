@@ -6,6 +6,8 @@ interface PlanToggleProps {
   /** Optional savings copy shown inside the yearly pill (e.g. "Save 40%"). */
   yearlySavingsLabel?: string;
   disabled?: boolean;
+  /** Stretch toggle to match pricing card width. */
+  fullWidth?: boolean;
 }
 
 /**
@@ -17,12 +19,15 @@ export function PlanToggle({
   onChange,
   yearlySavingsLabel,
   disabled = false,
+  fullWidth = false,
 }: PlanToggleProps) {
   return (
     <div
       role="tablist"
       aria-label="Billing cycle"
-      className="relative inline-flex items-center rounded-full border border-border bg-secondary p-1 text-[12px] font-medium"
+      className={`relative flex items-center rounded-full border border-border bg-secondary p-1 text-[12px] font-medium ${
+        fullWidth ? "w-full" : "inline-flex"
+      }`}
     >
       <CycleTab
         active={value === "monthly"}
@@ -73,7 +78,7 @@ function CycleTab({
       aria-selected={active}
       onClick={onClick}
       disabled={disabled}
-      className={`relative z-10 px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50 ${
+      className={`relative z-10 flex-1 px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50 ${
         active
           ? "bg-gradient-primary text-primary-foreground shadow-cta"
           : "text-muted-foreground hover:text-foreground"

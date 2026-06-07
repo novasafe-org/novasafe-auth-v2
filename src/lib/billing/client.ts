@@ -16,6 +16,7 @@
 
 import { runtime } from "@/config";
 import { billingConfig, billingPackageCandidates, type BillingCycle } from "@/config";
+import { resolveOfferingsCurrency, resolvePurchaseLocale } from "./locale-currency";
 import type { PaywallOfferings, PaywallPlan } from "./types";
 
 function assertBrowser(): void {
@@ -66,15 +67,16 @@ async function ensureConfigured(appUserId: string): Promise<PurchasesModule> {
     throw new BillingNotConfiguredError();
   }
   const mod = await loadSdk();
+  const config = { apiKey: billingConfig.publicApiKey, appUserId };
   if (!mod.Purchases.isConfigured()) {
-    mod.Purchases.configure(billingConfig.publicApiKey, appUserId);
+    mod.Purchases.configure(config);
     configuredForUserId = appUserId;
     return mod;
   }
   if (configuredForUserId && configuredForUserId !== appUserId) {
     // App-user-id changed (e.g. a different account signed up in the same tab).
     // Re-configure with the new identity so receipts attribute correctly.
-    mod.Purchases.configure(billingConfig.publicApiKey, appUserId);
+    mod.Purchases.configure(config);
     configuredForUserId = appUserId;
   }
   return mod;
@@ -103,10 +105,11 @@ export const billingClient = {
   async loadOfferings(appUserId: string): Promise<PaywallOfferings> {
     const mod = await ensureConfigured(appUserId);
     const purchases = mod.Purchases.getSharedInstance();
-    const offerings = await purchases.getOfferings();
+    const currency = resolveOfferingsCurrency();
+    const offerings = await purchases.getOfferings(currency ? { currency } : undefined);
     const offering = offerings.current ?? Object.values(offerings.all)[0] ?? null;
     if (!offering) {
-      return { offeringId: null, monthly: null, yearly: null, packageIds: [] };
+      return { offeringId: null, monthly: null, yearly: null, packageIds: [], currencyCode: currency };
     }
 
     const monthly = pickPlan(offering, "monthly");
@@ -117,6 +120,7 @@ export const billingClient = {
       monthly,
       yearly,
       packageIds: offering.availablePackages.map((p) => p.identifier),
+      currencyCode: monthly?.currencyCode ?? yearly?.currencyCode ?? currency,
     };
   },
 
@@ -185,7 +189,8 @@ export const billingClient = {
 
     let rcPackage: import("@revenuecat/purchases-js").Package | null = null;
     try {
-      const offerings = await purchases.getOfferings();
+      const currency = resolveOfferingsCurrency();
+      const offerings = await purchases.getOfferings(currency ? { currency } : undefined);
       const offering = offerings.current ?? Object.values(offerings.all)[0] ?? null;
       if (!offering) {
         return {
@@ -207,9 +212,11 @@ export const billingClient = {
     }
 
     try {
+      const selectedLocale = resolvePurchaseLocale();
       const result = await purchases.purchase({
         rcPackage,
         customerEmail,
+        ...(selectedLocale ? { selectedLocale, defaultLocale: selectedLocale } : {}),
       });
       const productId = result.storeTransaction?.productIdentifier ?? null;
       return { status: "completed", productId, rcAppUserId: appUserId };
@@ -273,7 +280,7 @@ function formatYearlyAsMonthly(
   const amount = typeof price.amountMicros === "number" ? price.amountMicros / 12_000_000 : null;
   if (amount === null || !Number.isFinite(amount)) return undefined;
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(resolvePurchaseLocale(), {
       style: "currency",
       currency: price.currency,
     }).format(amount);

@@ -39,6 +39,8 @@ export interface PaywallOfferings {
   yearly: PaywallPlan | null;
   /** Raw RC packages keyed by their identifier — handed back to the SDK on purchase. */
   packageIds: string[];
+  /** Currency requested or returned by RevenueCat/Paddle for this fetch. */
+  currencyCode?: string;
 }
 
 export interface SubscriptionSnapshot {

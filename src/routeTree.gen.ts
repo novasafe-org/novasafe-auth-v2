@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ProRouteImport } from './routes/pro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupIndexRouteImport } from './routes/signup.index'
@@ -29,6 +30,11 @@ const UpgradeRoute = UpgradeRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProRoute = ProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -80,6 +86,7 @@ const ConnectExtensionFailureRoute = ConnectExtensionFailureRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/pro': typeof ProRoute
   '/signup': typeof SignupRouteWithChildren
   '/upgrade': typeof UpgradeRoute
   '/billing/manage': typeof BillingManageRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/pro': typeof ProRoute
   '/upgrade': typeof UpgradeRoute
   '/billing/manage': typeof BillingManageRoute
   '/signup/pro': typeof SignupProRoute
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/pro': typeof ProRoute
   '/signup': typeof SignupRouteWithChildren
   '/upgrade': typeof UpgradeRoute
   '/billing/manage': typeof BillingManageRoute
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/pro'
     | '/signup'
     | '/upgrade'
     | '/billing/manage'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/pro'
     | '/upgrade'
     | '/billing/manage'
     | '/signup/pro'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/pro'
     | '/signup'
     | '/upgrade'
     | '/billing/manage'
@@ -158,6 +170,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ProRoute: typeof ProRoute
   SignupRoute: typeof SignupRouteWithChildren
   UpgradeRoute: typeof UpgradeRoute
   BillingManageRoute: typeof BillingManageRoute
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro': {
+      id: '/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -277,6 +297,7 @@ const ConnectExtensionRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ProRoute: ProRoute,
   SignupRoute: SignupRouteWithChildren,
   UpgradeRoute: UpgradeRoute,
   BillingManageRoute: BillingManageRoute,

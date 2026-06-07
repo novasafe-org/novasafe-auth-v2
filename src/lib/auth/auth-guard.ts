@@ -1,17 +1,17 @@
 import { redirect } from "@tanstack/react-router";
 
-import { buildLoginUrl, buildManageBillingUrl, buildUpgradeUrl } from "@/config";
+import { buildLoginUrl, buildManageBillingUrl, buildProUrl } from "@/config";
 import { loadManageBillingSessionAction, loadUpgradeSessionAction } from "./server-actions";
 
 /**
  * Upgrade routes require an authenticated session. Guests are sent to login
- * with a `next` parameter that returns them to `/upgrade` after sign-in.
+ * with a `next` parameter that returns them to `/pro` after sign-in.
  */
 export async function requireAuthenticatedForUpgrade(options?: {
   next?: string;
   ref?: string;
 }): Promise<{ user: { id: string; email: string; name?: string }; returnTo: string }> {
-  const upgradeReturn = buildUpgradeUrl({
+  const upgradeReturn = buildProUrl({
     next: options?.next,
     ref: options?.ref,
   });
@@ -55,7 +55,9 @@ export async function requireAuthenticatedForManageBilling(options?: {
   }
 
   if (result.status === "no-subscription") {
-    throw redirect({ href: result.redirectTo, replace: true });
+    const target = new URL(result.redirectTo);
+    target.searchParams.set("portalError", "1");
+    throw redirect({ href: target.toString(), replace: true });
   }
 
   return {

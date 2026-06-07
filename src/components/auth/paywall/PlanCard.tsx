@@ -18,17 +18,17 @@ interface PlanCardProps {
 export function PlanCard({ plan, features, loading = false }: PlanCardProps) {
   return (
     <div
-      className={`rounded-2xl border bg-card shadow-xs transition-all ${
+      className={`w-full rounded-2xl border bg-card shadow-sm transition-all ${
         loading ? "opacity-70 animate-pulse" : "opacity-100"
-      } border-primary/40 ring-soft`}
+      } border-primary/50 ring-soft`}
     >
-      <div className="flex items-start justify-between gap-3 p-4">
+      <div className="flex items-start justify-between gap-3 p-5">
         <div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
             NovaSafe Pro · {plan.cycle === "yearly" ? "Yearly" : "Monthly"}
           </div>
           <div className="mt-1.5 flex items-baseline gap-1.5">
-            <span className="text-[28px] font-semibold tracking-tight text-foreground">
+            <span className="text-[32px] font-semibold tracking-tight text-foreground">
               {plan.priceLabel || "—"}
             </span>
             <span className="text-[13px] text-muted-foreground">{plan.periodLabel}</span>

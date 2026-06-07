@@ -26,12 +26,12 @@ export function AuthShell({ kicker, headline, children, topBarAction, footer }: 
   return (
     <div className="min-h-screen w-full bg-background">
       <div className="w-full p-3 md:p-5 lg:p-6">
-        <div className="grid lg:grid-cols-2 gap-5 h-[calc(100vh-1.5rem)] md:h-[calc(100vh-2.5rem)] lg:h-[calc(100vh-3rem)]">
-          <div className="hidden lg:block">
+        <div className="grid lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)] gap-5 h-[calc(100vh-1.5rem)] md:h-[calc(100vh-2.5rem)] lg:h-[calc(100vh-3rem)]">
+          <div className="hidden lg:block min-w-0">
             <EditorialPanel kicker={kicker} headline={headline} />
           </div>
 
-          <div className="relative flex flex-col">
+          <div className="relative flex flex-col min-w-0">
             <div className="flex items-center justify-between px-2 lg:px-6 pt-2">
               <div className="lg:hidden">
                 <NovaLogo />
@@ -42,8 +42,8 @@ export function AuthShell({ kicker, headline, children, topBarAction, footer }: 
               </div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center overflow-y-auto scrollbar-hide">
-              <div className="w-full max-w-[440px] py-10 px-2 lg:px-6">
+            <div className="flex-1 flex items-start lg:items-center justify-center overflow-y-auto scrollbar-hide">
+              <div className="w-full max-w-[520px] py-8 lg:py-10 px-2 lg:px-5">
                 <div className="anim-fade-up">{children}</div>
 
                 <div className="mt-8 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">

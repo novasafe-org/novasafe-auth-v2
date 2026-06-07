@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Lock, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Lock, ShieldCheck, Sparkles } from "lucide-react";
 
 import {
   confirmProEntitlementAction,
@@ -22,6 +22,13 @@ const PRO_FEATURES = [
   "Priority recovery support, 24/7",
 ] as const;
 
+const CHECKOUT_FEATURES = [
+  "Unlimited passwords and devices",
+  "Password history",
+  "Dark-web breach monitoring",
+  "Priority support",
+] as const;
+
 /* ------------------------------------------------------------------------- */
 /* Public types                                                              */
 /* ------------------------------------------------------------------------- */
@@ -37,6 +44,8 @@ interface PaywallCardProps {
   onSkipToFree: () => void;
   /** Label for the secondary action (defaults to signup copy). */
   skipLabel?: string;
+  /** `checkout` = centered upgrade flow; `signup` = marketing signup paywall. */
+  variant?: "signup" | "checkout";
   /** Optional analytics ref forwarded from landing CTAs ("hero", "pricing", …). */
   ref?: string;
 }
@@ -58,6 +67,7 @@ export function PaywallCard({
   onComplete,
   onSkipToFree,
   skipLabel = "Continue with the free plan",
+  variant = "signup",
 }: PaywallCardProps) {
   const [stage, setStage] = useState<Stage>({ kind: "loading" });
   const [error, setError] = useState<string | null>(null);
@@ -199,17 +209,36 @@ export function PaywallCard({
   const purchasing = stage.kind === "purchasing" || stage.kind === "confirming";
   const isReady = stage.kind === "ready" || purchasing;
 
+  const isCheckout = variant === "checkout";
+
   return (
-    <>
-      <Title
-        eyebrow="Pro plan"
-        title="Unlock the full NovaSafe vault."
-        sub="Encrypted everywhere, syncing everywhere — and supporting an indie team that builds in public."
-      />
+    <div className="w-full space-y-5">
+      {isCheckout ? (
+        <div className="text-center space-y-4">
+          <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground sm:text-[28px]">
+            Upgrade to NovaSafe Pro
+          </h1>
+          <ul className="mx-auto max-w-[320px] space-y-2 text-left text-[13px] text-muted-foreground">
+            {CHECKOUT_FEATURES.map((feature) => (
+              <li key={feature} className="flex items-start gap-2">
+                <Check className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <>
+          <Title
+            eyebrow="Pro plan"
+            title="Unlock the full NovaSafe vault."
+            sub="Encrypted everywhere, syncing everywhere — and supporting an indie team that builds in public."
+          />
+          <PlanComparison />
+        </>
+      )}
 
-      <PlanComparison />
-
-      <div className="flex flex-col items-start gap-3">
+      <div className="w-full space-y-4">
         <PlanToggle
           value={cycle}
           onChange={(next) => {
@@ -217,68 +246,72 @@ export function PaywallCard({
           }}
           disabled={purchasing || !isReady}
           yearlySavingsLabel={offerings?.yearly?.badge ? "Save more" : undefined}
+          fullWidth
         />
-        <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+
+        <PlanCard
+          plan={
+            plan ?? {
+              packageId: "loading",
+              cycle,
+              priceLabel: "—",
+              periodLabel: cycle === "yearly" ? "/year" : "/month",
+            }
+          }
+          features={isCheckout ? CHECKOUT_FEATURES : PRO_FEATURES}
+          loading={!plan || stage.kind === "loading"}
+        />
+
+        {error && <ErrorBanner message={error} />}
+        {pendingNotice && !error && (
+          <div className="rounded-xl border border-primary/30 bg-primary-soft/40 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-foreground inline-flex items-start gap-2 w-full">
+            <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+            {pendingNotice}
+          </div>
+        )}
+
+        <PrimaryButton
+          type="button"
+          onClick={startPurchase}
+          loading={purchasing}
+          disabled={!plan || !isReady || purchasing}
+        >
+          {stage.kind === "confirming" ? (
+            "Confirming your subscription…"
+          ) : stage.kind === "purchasing" ? (
+            "Opening secure checkout…"
+          ) : (
+            <>
+              Start NovaSafe Pro <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </PrimaryButton>
+
+        <button
+          type="button"
+          onClick={() => {
+            onSkipToFree();
+            onComplete({ status: "skipped", reason: "user-chose-free" });
+          }}
+          disabled={purchasing}
+          className="text-[12px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-center w-full justify-center transition-colors disabled:opacity-60"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> {skipLabel}
+        </button>
+
+        <div className="w-full rounded-xl border border-border bg-secondary p-3 text-[12px] text-muted-foreground flex items-start gap-2">
+          <ShieldCheck className="h-4 w-4 text-success mt-0.5 shrink-0" />
+          <span>
+            Cancel any time from the app · 14-day money-back guarantee · Receipts emailed to{" "}
+            <span className="text-foreground font-medium">{user.email}</span>
+          </span>
+        </div>
+
+        <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5 w-full justify-center">
           <Lock className="h-3 w-3" /> Secure checkout via Paddle · Powered by RevenueCat
         </div>
       </div>
-
-      <PlanCard
-        plan={
-          plan ?? {
-            packageId: "loading",
-            cycle,
-            priceLabel: "—",
-            periodLabel: cycle === "yearly" ? "/year" : "/month",
-          }
-        }
-        features={PRO_FEATURES}
-        loading={!plan || stage.kind === "loading"}
-      />
-
-      {error && <ErrorBanner message={error} />}
-      {pendingNotice && !error && (
-        <div className="rounded-xl border border-primary/30 bg-primary-soft/40 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-foreground inline-flex items-start gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-          {pendingNotice}
-        </div>
-      )}
-
-      <PrimaryButton
-        type="button"
-        onClick={startPurchase}
-        loading={purchasing}
-        disabled={!plan || !isReady || purchasing}
-      >
-        {stage.kind === "confirming" ? (
-          "Confirming your subscription…"
-        ) : stage.kind === "purchasing" ? (
-          "Opening secure checkout…"
-        ) : (
-          <>
-            Start NovaSafe Pro <ArrowRight className="h-4 w-4" />
-          </>
-        )}
-      </PrimaryButton>
-
-      <button
-        type="button"
-        onClick={() => {
-          onSkipToFree();
-          onComplete({ status: "skipped", reason: "user-chose-free" });
-        }}
-        disabled={purchasing}
-        className="text-[12px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-center transition-colors disabled:opacity-60"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> {skipLabel}
-      </button>
-
-      <div className="rounded-xl border border-border bg-secondary p-3 text-[12px] text-muted-foreground inline-flex items-start gap-2">
-        <ShieldCheck className="h-4 w-4 text-success mt-0.5 shrink-0" />
-        Cancel any time from the app · 14-day money-back guarantee · Receipts emailed to{" "}
-        <span className="text-foreground font-medium">{user.email}</span>
-      </div>
-    </>
+    </div>
   );
 }
 
