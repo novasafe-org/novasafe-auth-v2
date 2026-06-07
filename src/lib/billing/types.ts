@@ -31,6 +31,8 @@ export interface PaywallPlan {
   effectiveMonthlyLabel?: string;
   /** Marketing badge — e.g. "Best value · save 40%". */
   badge?: string;
+  /** Raw price in micro-units from RC — used for savings % only. */
+  amountMicros?: number;
 }
 
 export interface PaywallOfferings {

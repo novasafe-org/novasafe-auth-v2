@@ -3,10 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { CheckoutShell } from "@/components/auth/CheckoutShell";
-import { PaywallCard, type PaywallOutcome } from "@/components/auth/paywall/PaywallCard";
+import { ProUpgradeCheckout } from "@/components/auth/paywall/ProUpgradeCheckout";
+import type { ProCheckoutOutcome } from "@/components/auth/paywall/useProCheckout";
 import { ProSuccessCard } from "@/components/auth/paywall/ProSuccessCard";
 import { ProFailureCard } from "@/components/auth/paywall/ProFailureCard";
-import { Section } from "@/components/auth/primitives";
 import { requireAuthenticatedForUpgrade } from "@/lib/auth/auth-guard";
 import type { SubscriptionSnapshot } from "@/lib/billing";
 
@@ -57,7 +57,7 @@ function ProCheckoutRoute() {
   const successRedirect = withUpgradedFlag(returnTo);
   const [stage, setStage] = useState<Stage>({ kind: "paywall" });
 
-  const handlePaywallOutcome = (outcome: PaywallOutcome) => {
+  const handlePaywallOutcome = (outcome: ProCheckoutOutcome) => {
     if (outcome.status === "active") {
       setStage({ kind: "pro-success", subscription: outcome.subscription });
       return;
@@ -71,27 +71,28 @@ function ProCheckoutRoute() {
 
   return (
     <CheckoutShell backHref={returnTo} backLabel="Back to billing">
-      <Section>
-        {stage.kind === "paywall" && (
-          <PaywallCard
-            variant="checkout"
-            user={{ id: user.id, email: user.email }}
-            skipLabel="Return to billing"
-            onComplete={handlePaywallOutcome}
-            onSkipToFree={() => window.location.assign(returnTo)}
-          />
-        )}
+      {stage.kind === "paywall" && (
+        <ProUpgradeCheckout
+          user={{ id: user.id, email: user.email }}
+          skipLabel="Return to billing"
+          onComplete={handlePaywallOutcome}
+          onSkip={() => window.location.assign(returnTo)}
+        />
+      )}
 
-        {stage.kind === "pro-success" && (
+      {stage.kind === "pro-success" && (
+        <div className="max-w-lg mx-auto">
           <ProSuccessCard
             fullName={user.name || user.email}
             subscription={stage.subscription}
             redirectTo={successRedirect}
             ctaLabel="Return to billing"
           />
-        )}
+        </div>
+      )}
 
-        {stage.kind === "pro-failed" && (
+      {stage.kind === "pro-failed" && (
+        <div className="max-w-lg mx-auto">
           <ProFailureCard
             context="upgrade"
             message={stage.message}
@@ -99,8 +100,8 @@ function ProCheckoutRoute() {
             onContinueFree={() => window.location.assign(returnTo)}
             continueLabel="Return to billing"
           />
-        )}
-      </Section>
+        </div>
+      )}
     </CheckoutShell>
   );
 }

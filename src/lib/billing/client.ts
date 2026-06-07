@@ -262,7 +262,9 @@ export const billingClient = {
     let rcPackage: import("@revenuecat/purchases-js").Package | null = null;
     try {
       await ensurePreloaded(mod);
-      const offering = await resolveOfferingForUser(appUserId, purchases);
+      offeringCache = null;
+      const { offering } = await fetchCurrentOffering(purchases);
+      rememberOffering(appUserId, offering);
       rcPackage = resolvePackage(offering, cycle);
       if (!rcPackage) {
         return {
@@ -277,13 +279,18 @@ export const billingClient = {
 
     try {
       const selectedLocale = resolvePurchaseLocale();
-      const result = await purchases.purchase({
+      const purchaseParams: import("@revenuecat/purchases-js").PurchaseParams = {
         rcPackage,
-        customerEmail,
-        htmlTarget,
-        skipSuccessPage: true,
-        ...(selectedLocale ? { selectedLocale, defaultLocale: selectedLocale } : {}),
-      });
+        customerEmail: customerEmail.trim(),
+      };
+      if (selectedLocale) {
+        purchaseParams.selectedLocale = selectedLocale;
+        purchaseParams.defaultLocale = selectedLocale;
+      }
+      if (htmlTarget && htmlTarget.isConnected && htmlTarget.clientHeight > 0) {
+        purchaseParams.htmlTarget = htmlTarget;
+      }
+      const result = await purchases.purchase(purchaseParams);
       const productId = result.storeTransaction?.productIdentifier ?? null;
       return { status: "completed", productId, rcAppUserId: appUserId };
     } catch (err) {
@@ -307,6 +314,8 @@ function pickPlan(offering: RcOffering, cycle: BillingCycle): PaywallPlan | null
     cycle,
     priceLabel: price?.formattedPrice ?? "",
     currencyCode: price?.currency ?? undefined,
+    amountMicros:
+      typeof price?.amountMicros === "number" ? price.amountMicros : undefined,
     periodLabel: cycle === "yearly" ? "/year" : "/month",
     effectiveMonthlyLabel:
       cycle === "yearly" ? (perMonthFromSdk ?? formatYearlyAsMonthly(price)) : undefined,
@@ -387,9 +396,16 @@ function mapSdkError(mod: PurchasesModule, err: unknown): PurchaseOutcome {
         message: err.message || "Pro signup is misconfigured. Please try again later.",
       };
     }
+    if (err.errorCode === mod.ErrorCode.PurchaseInvalidError) {
+      return {
+        status: "error",
+        code: "payment_failed",
+        message:
+          "Checkout couldn't start. Refresh the page and try again. If this keeps happening, contact support@novasafe.app.",
+      };
+    }
     if (
       backendCode === 7878 ||
-      err.errorCode === mod.ErrorCode.PurchaseInvalidError ||
       err.errorCode === mod.ErrorCode.ProductNotAvailableForPurchaseError
     ) {
       return {

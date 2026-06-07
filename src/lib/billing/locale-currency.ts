@@ -118,12 +118,21 @@ function resolveRegion(): string | undefined {
   }
 }
 
+const LOCALE_PATTERN = /^[a-z]{2}(-[A-Z]{2})?$/;
+
+function normalizeLocale(locale: string | undefined): string | undefined {
+  if (!locale) return undefined;
+  const normalized = locale.trim().replace(/_/g, "-");
+  if (!LOCALE_PATTERN.test(normalized)) return undefined;
+  return normalized;
+}
+
 /** Browser locale for RC purchase-flow copy (e.g. `en-IN`). */
 export function resolvePurchaseLocale(): string | undefined {
   const locales = readBrowserLocales();
   const india = locales.find((l) => regionFromLocale(l) === "IN");
-  if (india) return india.replace(/_/g, "-");
-  return locales[0]?.replace(/_/g, "-") || undefined;
+  const preferred = india ?? locales[0];
+  return normalizeLocale(preferred?.replace(/_/g, "-"));
 }
 
 /** ISO region hint used for pricing diagnostics (e.g. `IN`). */
