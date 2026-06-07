@@ -6,6 +6,8 @@ interface ProFailureCardProps {
   message: string;
   onRetry: () => void;
   onContinueFree: () => void;
+  context?: "signup" | "upgrade";
+  continueLabel?: string;
 }
 
 /**
@@ -13,7 +15,13 @@ interface ProFailureCardProps {
  * backend can't confirm the Pro entitlement. The user always has two ways
  * out — try again, or fall back to the free plan they already have.
  */
-export function ProFailureCard({ message, onRetry, onContinueFree }: ProFailureCardProps) {
+export function ProFailureCard({
+  message,
+  onRetry,
+  onContinueFree,
+  context = "signup",
+  continueLabel = "Continue with the free plan",
+}: ProFailureCardProps) {
   return (
     <>
       <Title
@@ -27,9 +35,13 @@ export function ProFailureCard({ message, onRetry, onContinueFree }: ProFailureC
           <ShieldOff className="h-4 w-4 text-destructive" />
         </div>
         <div className="text-[12.5px] leading-relaxed">
-          <div className="font-medium text-foreground">Your free vault is already live</div>
+          <div className="font-medium text-foreground">
+            {context === "upgrade" ? "Your free plan is unchanged" : "Your free vault is already live"}
+          </div>
           <div className="text-muted-foreground">
-            Your account was created — only the Pro upgrade didn't complete. Nothing was charged.
+            {context === "upgrade"
+              ? "Only the Pro upgrade didn't complete. Nothing was charged."
+              : "Your account was created — only the Pro upgrade didn't complete. Nothing was charged."}
           </div>
         </div>
       </div>
@@ -38,7 +50,7 @@ export function ProFailureCard({ message, onRetry, onContinueFree }: ProFailureC
         <Repeat className="h-4 w-4" /> Try the payment again
       </PrimaryButton>
       <GhostButton type="button" onClick={onContinueFree}>
-        Continue with the free plan <ArrowRight className="h-4 w-4" />
+        {continueLabel} <ArrowRight className="h-4 w-4" />
       </GhostButton>
     </>
   );

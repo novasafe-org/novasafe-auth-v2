@@ -13,6 +13,8 @@ export const AUTH_PATH = {
   Login: "/login",
   Signup: "/signup",
   SignupPro: "/signup/pro",
+  Upgrade: "/upgrade",
+  BillingManage: "/billing/manage",
 } as const;
 
 export type AuthPath = (typeof AUTH_PATH)[keyof typeof AUTH_PATH];

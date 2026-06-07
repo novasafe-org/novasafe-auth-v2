@@ -118,6 +118,15 @@ export const subscriptionsApi = {
           processedAt: string | null;
           status?: string;
         }>;
+        purchases?: Array<{
+          eventId: string;
+          eventType: string;
+          productId: string | null;
+          transactionId: string | null;
+          store: string | null;
+          environment: string | null;
+          purchasedAt: string | null;
+        }>;
       }>
     >(`${PREFIX}/membership`, {
       method: "GET",

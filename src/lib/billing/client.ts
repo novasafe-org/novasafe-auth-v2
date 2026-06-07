@@ -125,6 +125,47 @@ export const billingClient = {
    * The RC SDK opens a modal Paddle checkout and resolves once the user
    * either pays, cancels, or hits an error.
    */
+  /**
+   * Resolve the provider-managed customer portal URL for `appUserId`.
+   * Paddle subscriptions use RevenueCat's management URL (may require email verification).
+   */
+  async getManagementUrl(appUserId: string): Promise<
+    | { status: "ready"; url: string }
+    | { status: "unavailable"; message: string }
+    | { status: "error"; code: PurchaseErrorCode; message: string }
+  > {
+    let mod: PurchasesModule;
+    try {
+      mod = await ensureConfigured(appUserId);
+    } catch (err) {
+      if (err instanceof BillingNotConfiguredError) {
+        return { status: "unavailable", message: err.message };
+      }
+      throw err;
+    }
+    try {
+      const purchases = mod.Purchases.getSharedInstance();
+      const info = await purchases.getCustomerInfo();
+      const url = info.managementURL;
+      if (!url) {
+        return {
+          status: "unavailable",
+          message: "No subscription management portal is available for this account yet.",
+        };
+      }
+      return { status: "ready", url };
+    } catch (err) {
+      const mapped = mapSdkError(mod, err);
+      if (mapped.status === "cancelled") {
+        return { status: "unavailable", message: "Subscription management was cancelled." };
+      }
+      if (mapped.status === "error") {
+        return { status: "error", code: mapped.code, message: mapped.message };
+      }
+      return { status: "unavailable", message: "Couldn't open the subscription portal." };
+    }
+  },
+
   async purchase(input: {
     appUserId: string;
     customerEmail: string;

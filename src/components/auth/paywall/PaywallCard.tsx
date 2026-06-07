@@ -34,6 +34,8 @@ interface PaywallCardProps {
   user: { id: string; email: string };
   onComplete: (outcome: PaywallOutcome) => void;
   onSkipToFree: () => void;
+  /** Label for the secondary action (defaults to signup copy). */
+  skipLabel?: string;
   /** Optional analytics ref forwarded from landing CTAs ("hero", "pricing", …). */
   ref?: string;
 }
@@ -50,7 +52,12 @@ type Stage =
 /* Component                                                                 */
 /* ------------------------------------------------------------------------- */
 
-export function PaywallCard({ user, onComplete, onSkipToFree }: PaywallCardProps) {
+export function PaywallCard({
+  user,
+  onComplete,
+  onSkipToFree,
+  skipLabel = "Continue with the free plan",
+}: PaywallCardProps) {
   const [stage, setStage] = useState<Stage>({ kind: "loading" });
   const [error, setError] = useState<string | null>(null);
   const [pendingNotice, setPendingNotice] = useState<string | null>(null);
@@ -260,7 +267,7 @@ export function PaywallCard({ user, onComplete, onSkipToFree }: PaywallCardProps
         disabled={purchasing}
         className="text-[12px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-center transition-colors disabled:opacity-60"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> Continue with the free plan
+        <ArrowLeft className="h-3.5 w-3.5" /> {skipLabel}
       </button>
 
       <div className="rounded-xl border border-border bg-secondary p-3 text-[12px] text-muted-foreground inline-flex items-start gap-2">

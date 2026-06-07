@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { ApiError, authApi, type AuthUser } from "@/lib/api";
+import { ApiError, authApi, subscriptionsApi, type AuthUser } from "@/lib/api";
 import { buildAppUrl, resolvePostAuthRedirect } from "@/config";
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from "./session.server";
 
@@ -308,3 +308,107 @@ export const logoutAction = createServerFn({ method: "POST" }).handler(
     }
   },
 );
+
+export type LoadUpgradeSessionResult =
+  | { status: "ready"; user: AuthUser; returnTo: string }
+  | { status: "already-pro"; redirectTo: string }
+  | { status: "unauthorized" };
+
+export type LoadManageBillingSessionResult =
+  | { status: "ready"; user: AuthUser; returnTo: string }
+  | { status: "no-subscription"; redirectTo: string }
+  | { status: "unauthorized" };
+
+/**
+ * Gate for `/upgrade`. Requires a valid session and skips the paywall when
+ * the user already has an active Pro subscription.
+ */
+export const loadUpgradeSessionAction = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        next: z.string().url().optional().nullable(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data }): Promise<LoadUpgradeSessionResult> => {
+    const token = readSessionToken();
+    if (!token) return { status: "unauthorized" };
+
+    try {
+      const session = await authApi.validateSession(token);
+      if (
+        !session.success ||
+        !session.user ||
+        session.pendingOtpProvider ||
+        session.pendingNovaSafeEmailVerification
+      ) {
+        return { status: "unauthorized" };
+      }
+
+      const state = await subscriptionsApi.getState(token, { forceRefresh: true });
+      if (state.data.isPro && state.data.isActive) {
+        return {
+          status: "already-pro",
+          redirectTo: resolvePostAuthRedirect(data.next) || buildAppUrl({ path: "/account/billing" }),
+        };
+      }
+
+      return {
+        status: "ready",
+        user: session.user,
+        returnTo: resolvePostAuthRedirect(data.next) || buildAppUrl({ path: "/account/billing" }),
+      };
+    } catch {
+      return { status: "unauthorized" };
+    }
+  });
+
+/**
+ * Gate for `/billing/manage`. Requires a session and a subscription history
+ * (active Pro, cancelled-but-active, or prior purchases).
+ */
+export const loadManageBillingSessionAction = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        next: z.string().url().optional().nullable(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data }): Promise<LoadManageBillingSessionResult> => {
+    const token = readSessionToken();
+    if (!token) return { status: "unauthorized" };
+
+    try {
+      const session = await authApi.validateSession(token);
+      if (
+        !session.success ||
+        !session.user ||
+        session.pendingOtpProvider ||
+        session.pendingNovaSafeEmailVerification
+      ) {
+        return { status: "unauthorized" };
+      }
+
+      const membership = await subscriptionsApi.getMembership(token);
+      const sub = membership.data.subscription;
+      const hasPurchases = (membership.data.purchases?.length ?? 0) > 0;
+      const hasProAccess =
+        sub.isPro ||
+        sub.inGracePeriod ||
+        sub.subscriptionStatus === "cancelled" ||
+        sub.subscriptionStatus === "billing_issue" ||
+        sub.subscriptionStatus === "grace_period";
+      const returnTo =
+        resolvePostAuthRedirect(data.next) || buildAppUrl({ path: "/account/billing" });
+
+      if (!hasProAccess && !hasPurchases) {
+        return { status: "no-subscription", redirectTo: returnTo };
+      }
+
+      return { status: "ready", user: session.user, returnTo };
+    } catch {
+      return { status: "unauthorized" };
+    }
+  });

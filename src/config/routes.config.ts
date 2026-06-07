@@ -61,6 +61,16 @@ export function buildSignupProUrl(options?: Omit<BuildOptions, "path">): string 
   return buildAuthUrlAt(AUTH_PATH.SignupPro, options);
 }
 
+/** Authenticated upgrade screen (existing free users → Pro paywall). */
+export function buildUpgradeUrl(options?: Omit<BuildOptions, "path">): string {
+  return buildAuthUrlAt(AUTH_PATH.Upgrade, options);
+}
+
+/** RevenueCat customer portal for subscription management (authenticated). */
+export function buildManageBillingUrl(options?: Omit<BuildOptions, "path">): string {
+  return buildAuthUrlAt(AUTH_PATH.BillingManage, options);
+}
+
 /** Build an absolute URL pointing at the authenticated app project. */
 export function buildAppUrl(options?: BuildOptions): string {
   const url = new URL(appConfig.urls.app);
@@ -118,6 +128,8 @@ export const ROUTES = Object.freeze({
   buildLoginUrl,
   buildSignupUrl,
   buildSignupProUrl,
+  buildUpgradeUrl,
+  buildManageBillingUrl,
   buildAppUrl,
   buildLandingUrl,
   resolvePostAuthRedirect,
