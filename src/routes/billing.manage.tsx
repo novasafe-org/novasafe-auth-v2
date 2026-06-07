@@ -53,7 +53,8 @@ function ManageBillingRoute() {
       if (!billingClient.isEnabled()) {
         setStage({
           kind: "unavailable",
-          message: "Subscription management isn't configured for this environment.",
+          message:
+            "Set VITE_REVENUECAT_PUBLIC_API_KEY_WEB on novasafe-auth-v2 and redeploy to enable the billing portal.",
         });
         return;
       }

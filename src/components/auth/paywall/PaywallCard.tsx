@@ -314,11 +314,11 @@ function ConfigurationMissing({ onSkipToFree }: { onSkipToFree: () => void }) {
     <>
       <Title
         eyebrow="Pro plan"
-        title="Pro signup is paused right now."
-        sub="Web billing isn't configured for this environment yet. You can still create your free vault and upgrade from the app once Pro is live."
+        title="Web billing isn't configured yet."
+        sub="Set VITE_REVENUECAT_PUBLIC_API_KEY_WEB in novasafe-auth-v2 (RevenueCat → Project → Web billing → Public API key), rebuild, and redeploy. Until then, Pro checkout and subscription management are unavailable."
       />
       <PrimaryButton type="button" onClick={onSkipToFree}>
-        Continue with the free plan <ArrowRight className="h-4 w-4" />
+        Return to the app <ArrowRight className="h-4 w-4" />
       </PrimaryButton>
     </>
   );
