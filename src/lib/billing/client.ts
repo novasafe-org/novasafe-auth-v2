@@ -16,7 +16,11 @@
 
 import { runtime } from "@/config";
 import { billingConfig, billingPackageCandidates, type BillingCycle } from "@/config";
-import { resolveOfferingsCurrency, resolvePurchaseLocale } from "./locale-currency";
+import {
+  resolveOfferingsCurrency,
+  resolvePricingRegion,
+  resolvePurchaseLocale,
+} from "./locale-currency";
 import type { PaywallOfferings, PaywallPlan } from "./types";
 
 function assertBrowser(): void {
@@ -49,9 +53,19 @@ export type PurchaseErrorCode =
 /* ------------------------------------------------------------------------- */
 
 type PurchasesModule = typeof import("@revenuecat/purchases-js");
+type RcOffering = import("@revenuecat/purchases-js").Offering;
 
 let modulePromise: Promise<PurchasesModule> | null = null;
 let configuredForUserId: string | null = null;
+let preloadPromise: Promise<void> | null = null;
+
+type OfferingCache = {
+  appUserId: string;
+  offering: RcOffering;
+  currencyUsed?: string;
+};
+
+let offeringCache: OfferingCache | null = null;
 
 async function loadSdk(): Promise<PurchasesModule> {
   assertBrowser();
@@ -59,6 +73,17 @@ async function loadSdk(): Promise<PurchasesModule> {
     modulePromise = import("@revenuecat/purchases-js");
   }
   return modulePromise;
+}
+
+async function ensurePreloaded(mod: PurchasesModule): Promise<void> {
+  if (!preloadPromise) {
+    const purchases = mod.Purchases.getSharedInstance();
+    preloadPromise = purchases.preload().catch((err) => {
+      console.warn("[billing] preload failed (checkout may still work)", err);
+      preloadPromise = null;
+    });
+  }
+  await preloadPromise;
 }
 
 /** Configure the SDK once per page-lifetime. Safe to call repeatedly. */
@@ -71,13 +96,15 @@ async function ensureConfigured(appUserId: string): Promise<PurchasesModule> {
   if (!mod.Purchases.isConfigured()) {
     mod.Purchases.configure(config);
     configuredForUserId = appUserId;
+    void ensurePreloaded(mod);
     return mod;
   }
   if (configuredForUserId && configuredForUserId !== appUserId) {
-    // App-user-id changed (e.g. a different account signed up in the same tab).
-    // Re-configure with the new identity so receipts attribute correctly.
     mod.Purchases.configure(config);
     configuredForUserId = appUserId;
+    preloadPromise = null;
+    offeringCache = null;
+    void ensurePreloaded(mod);
   }
   return mod;
 }
@@ -89,6 +116,53 @@ export class BillingNotConfiguredError extends Error {
   }
 }
 
+async function fetchCurrentOffering(
+  purchases: import("@revenuecat/purchases-js").Purchases,
+): Promise<{ offering: RcOffering; currencyUsed?: string }> {
+  const preferred = resolveOfferingsCurrency();
+
+  const load = async (currency?: string) => {
+    const offerings = await purchases.getOfferings(currency ? { currency } : undefined);
+    const offering = offerings.current ?? Object.values(offerings.all)[0] ?? null;
+    return { offering, currency };
+  };
+
+  if (preferred) {
+    const localized = await load(preferred);
+    const returnedCurrency =
+      localized.offering?.availablePackages[0]?.webBillingProduct?.price?.currency;
+    if (localized.offering && returnedCurrency === preferred) {
+      return { offering: localized.offering, currencyUsed: preferred };
+    }
+    console.info(
+      `[billing] ${preferred} not available from provider (got ${returnedCurrency ?? "none"}); using geo/default`,
+    );
+  }
+
+  const fallback = await load(undefined);
+  if (!fallback.offering) {
+    throw new Error("No offering is currently published in RevenueCat.");
+  }
+  return { offering: fallback.offering, currencyUsed: fallback.currency };
+}
+
+function rememberOffering(appUserId: string, offering: RcOffering, currencyUsed?: string): void {
+  offeringCache = { appUserId, offering, currencyUsed };
+}
+
+async function resolveOfferingForUser(
+  appUserId: string,
+  purchases: import("@revenuecat/purchases-js").Purchases,
+): Promise<RcOffering> {
+  if (offeringCache?.appUserId === appUserId) {
+    return offeringCache.offering;
+  }
+  await ensurePreloaded(await loadSdk());
+  const { offering, currencyUsed } = await fetchCurrentOffering(purchases);
+  rememberOffering(appUserId, offering, currencyUsed);
+  return offering;
+}
+
 /* ------------------------------------------------------------------------- */
 /* Public surface                                                            */
 /* ------------------------------------------------------------------------- */
@@ -98,41 +172,38 @@ export const billingClient = {
     return billingConfig.enabled;
   },
 
-  /**
-   * Load the current Pro offering for `appUserId` and project it down to
-   * the narrow `PaywallOfferings` shape our UI consumes.
-   */
   async loadOfferings(appUserId: string): Promise<PaywallOfferings> {
     const mod = await ensureConfigured(appUserId);
     const purchases = mod.Purchases.getSharedInstance();
-    const currency = resolveOfferingsCurrency();
-    const offerings = await purchases.getOfferings(currency ? { currency } : undefined);
-    const offering = offerings.current ?? Object.values(offerings.all)[0] ?? null;
-    if (!offering) {
-      return { offeringId: null, monthly: null, yearly: null, packageIds: [], currencyCode: currency };
+    try {
+      const { offering, currencyUsed } = await fetchCurrentOffering(purchases);
+      rememberOffering(appUserId, offering, currencyUsed);
+
+      const monthly = pickPlan(offering, "monthly");
+      const yearly = pickPlan(offering, "yearly");
+
+      return {
+        offeringId: offering.identifier,
+        monthly,
+        yearly,
+        packageIds: offering.availablePackages.map((p) => p.identifier),
+        currencyCode: monthly?.currencyCode ?? yearly?.currencyCode ?? currencyUsed,
+        pricingRegion: resolvePricingRegion(),
+        requestedCurrency: currencyUsed,
+      };
+    } catch (err) {
+      console.error("[billing] loadOfferings failed", err);
+      return {
+        offeringId: null,
+        monthly: null,
+        yearly: null,
+        packageIds: [],
+        currencyCode: resolveOfferingsCurrency(),
+        pricingRegion: resolvePricingRegion(),
+      };
     }
-
-    const monthly = pickPlan(offering, "monthly");
-    const yearly = pickPlan(offering, "yearly");
-
-    return {
-      offeringId: offering.identifier,
-      monthly,
-      yearly,
-      packageIds: offering.availablePackages.map((p) => p.identifier),
-      currencyCode: monthly?.currencyCode ?? yearly?.currencyCode ?? currency,
-    };
   },
 
-  /**
-   * Launch the RevenueCat purchase flow for the package matching `cycle`.
-   * The RC SDK opens a modal Paddle checkout and resolves once the user
-   * either pays, cancels, or hits an error.
-   */
-  /**
-   * Resolve the provider-managed customer portal URL for `appUserId`.
-   * Paddle subscriptions use RevenueCat's management URL (may require email verification).
-   */
   async getManagementUrl(appUserId: string): Promise<
     | { status: "ready"; url: string }
     | { status: "unavailable"; message: string }
@@ -174,8 +245,9 @@ export const billingClient = {
     appUserId: string;
     customerEmail: string;
     cycle: BillingCycle;
+    htmlTarget?: HTMLElement;
   }): Promise<PurchaseOutcome> {
-    const { appUserId, customerEmail, cycle } = input;
+    const { appUserId, customerEmail, cycle, htmlTarget } = input;
     let mod: PurchasesModule;
     try {
       mod = await ensureConfigured(appUserId);
@@ -189,16 +261,8 @@ export const billingClient = {
 
     let rcPackage: import("@revenuecat/purchases-js").Package | null = null;
     try {
-      const currency = resolveOfferingsCurrency();
-      const offerings = await purchases.getOfferings(currency ? { currency } : undefined);
-      const offering = offerings.current ?? Object.values(offerings.all)[0] ?? null;
-      if (!offering) {
-        return {
-          status: "error",
-          code: "configuration",
-          message: "No offering is currently published in RevenueCat.",
-        };
-      }
+      await ensurePreloaded(mod);
+      const offering = await resolveOfferingForUser(appUserId, purchases);
       rcPackage = resolvePackage(offering, cycle);
       if (!rcPackage) {
         return {
@@ -216,6 +280,8 @@ export const billingClient = {
       const result = await purchases.purchase({
         rcPackage,
         customerEmail,
+        htmlTarget,
+        skipSuccessPage: true,
         ...(selectedLocale ? { selectedLocale, defaultLocale: selectedLocale } : {}),
       });
       const productId = result.storeTransaction?.productIdentifier ?? null;
@@ -230,16 +296,11 @@ export const billingClient = {
 /* Internals                                                                 */
 /* ------------------------------------------------------------------------- */
 
-function pickPlan(
-  offering: import("@revenuecat/purchases-js").Offering,
-  cycle: BillingCycle,
-): PaywallPlan | null {
+function pickPlan(offering: RcOffering, cycle: BillingCycle): PaywallPlan | null {
   const pkg = resolvePackage(offering, cycle);
   if (!pkg) return null;
   const product = pkg.webBillingProduct;
   const price = product.price;
-  // RC's PricingPhase already exposes a locale-formatted per-month rate
-  // for yearly subscriptions — prefer that over manual amountMicros math.
   const perMonthFromSdk = product.defaultSubscriptionOption?.base.pricePerMonth?.formattedPrice;
   return {
     packageId: pkg.identifier,
@@ -254,7 +315,7 @@ function pickPlan(
 }
 
 function resolvePackage(
-  offering: import("@revenuecat/purchases-js").Offering,
+  offering: RcOffering,
   cycle: BillingCycle,
 ): import("@revenuecat/purchases-js").Package | null {
   const direct = cycle === "yearly" ? offering.annual : offering.monthly;
@@ -291,6 +352,11 @@ function formatYearlyAsMonthly(
 
 function mapSdkError(mod: PurchasesModule, err: unknown): PurchaseOutcome {
   if (err instanceof mod.PurchasesError) {
+    const backendCode =
+      typeof (err as { backendErrorCode?: number }).backendErrorCode === "number"
+        ? (err as { backendErrorCode: number }).backendErrorCode
+        : undefined;
+
     if (err.errorCode === mod.ErrorCode.UserCancelledError) {
       return { status: "cancelled" };
     }
@@ -321,10 +387,29 @@ function mapSdkError(mod: PurchasesModule, err: unknown): PurchaseOutcome {
         message: err.message || "Pro signup is misconfigured. Please try again later.",
       };
     }
+    if (
+      backendCode === 7878 ||
+      err.errorCode === mod.ErrorCode.PurchaseInvalidError ||
+      err.errorCode === mod.ErrorCode.ProductNotAvailableForPurchaseError
+    ) {
+      return {
+        status: "error",
+        code: "payment_failed",
+        message:
+          "Checkout couldn't be opened. This can happen after a previous subscription expires — wait a few minutes and try again, or email support@novasafe.app for help.",
+      };
+    }
     return {
       status: "error",
       code: "payment_failed",
       message: err.message || "Payment couldn't be completed.",
+    };
+  }
+  if (err instanceof Error && err.message.includes("No offering")) {
+    return {
+      status: "error",
+      code: "configuration",
+      message: err.message,
     };
   }
   console.error("[billing] unexpected SDK error", err);

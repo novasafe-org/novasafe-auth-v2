@@ -1,9 +1,8 @@
 /**
- * Resolves the ISO 4217 currency code to pass to RevenueCat `getOfferings()`.
+ * Resolves locale and ISO 4217 currency for RevenueCat `getOfferings()`.
  *
- * RevenueCat geolocates when `currency` is omitted, but SSR/hydration timing,
- * VPNs, and Paddle's default currency can still surface USD. We bias toward the
- * customer's browser locale and timezone before falling back to RC geo.
+ * Physical location (timezone) is preferred over browser language — many users
+ * in India run `en-US` as their browser language.
  */
 
 const TIMEZONE_CURRENCY: Readonly<Record<string, string>> = {
@@ -89,28 +88,55 @@ function currencyFromRegion(region: string | undefined): string | undefined {
   return REGION_CURRENCY[region];
 }
 
+function readBrowserLocales(): string[] {
+  if (typeof navigator === "undefined") return [];
+  const langs = navigator.languages?.length ? [...navigator.languages] : [];
+  if (navigator.language) langs.push(navigator.language);
+  return langs;
+}
+
+function resolveRegion(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz === "Asia/Kolkata" || tz === "Asia/Calcutta") return "IN";
+  } catch {
+    // ignore
+  }
+
+  for (const locale of readBrowserLocales()) {
+    const region = regionFromLocale(locale);
+    if (region) return region;
+  }
+
+  try {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    return regionFromLocale(locale);
+  } catch {
+    return undefined;
+  }
+}
+
 /** Browser locale for RC purchase-flow copy (e.g. `en-IN`). */
 export function resolvePurchaseLocale(): string | undefined {
-  if (typeof navigator === "undefined") return undefined;
-  const locale = navigator.language?.trim();
-  return locale || undefined;
+  const locales = readBrowserLocales();
+  const india = locales.find((l) => regionFromLocale(l) === "IN");
+  if (india) return india.replace(/_/g, "-");
+  return locales[0]?.replace(/_/g, "-") || undefined;
+}
+
+/** ISO region hint used for pricing diagnostics (e.g. `IN`). */
+export function resolvePricingRegion(): string | undefined {
+  return resolveRegion();
 }
 
 /**
- * Best-effort currency for offerings fetch. Returns `undefined` when unknown so
- * RevenueCat can still attempt IP geolocation.
+ * Preferred currency for offerings fetch. Only used when RC/Paddle publish a
+ * price in that currency — caller must verify the returned `price.currency`.
  */
 export function resolveOfferingsCurrency(): string | undefined {
   if (typeof window === "undefined") return undefined;
-
-  const locale =
-    (typeof Intl !== "undefined" &&
-      Intl.DateTimeFormat().resolvedOptions().locale) ||
-    navigator.language ||
-    "";
-  const region = regionFromLocale(locale);
-  const fromLocale = currencyFromRegion(region);
-  if (fromLocale) return fromLocale;
 
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -119,5 +145,6 @@ export function resolveOfferingsCurrency(): string | undefined {
     // ignore
   }
 
-  return undefined;
+  const region = resolveRegion();
+  return currencyFromRegion(region);
 }

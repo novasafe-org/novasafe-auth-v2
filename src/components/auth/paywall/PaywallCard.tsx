@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Lock, ShieldCheck, Sparkles } from "lucide-react";
 
 import {
@@ -72,6 +72,7 @@ export function PaywallCard({
   const [stage, setStage] = useState<Stage>({ kind: "loading" });
   const [error, setError] = useState<string | null>(null);
   const [pendingNotice, setPendingNotice] = useState<string | null>(null);
+  const checkoutMountRef = useRef<HTMLDivElement>(null);
 
   /* --------------------------- Bootstrap ----------------------------- */
 
@@ -116,12 +117,16 @@ export function PaywallCard({
     }
     setError(null);
     setStage({ kind: "purchasing", offerings, cycle });
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
 
     const { billingClient } = await import("@/lib/billing/client");
     const outcome = await billingClient.purchase({
       appUserId: user.id,
       customerEmail: user.email,
       cycle,
+      htmlTarget: checkoutMountRef.current ?? undefined,
     });
 
     if (outcome.status === "cancelled") {
@@ -210,6 +215,10 @@ export function PaywallCard({
   const isReady = stage.kind === "ready" || purchasing;
 
   const isCheckout = variant === "checkout";
+  const showIndiaUsdNote =
+    isCheckout &&
+    offerings?.pricingRegion === "IN" &&
+    (plan?.currencyCode === "USD" || offerings?.currencyCode === "USD");
 
   return (
     <div className="w-full space-y-5">
@@ -262,6 +271,13 @@ export function PaywallCard({
           loading={!plan || stage.kind === "loading"}
         />
 
+        {showIndiaUsdNote ? (
+          <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
+            INR pricing is not yet published for this plan in RevenueCat/Paddle — checkout will
+            bill in USD until regional prices are configured.
+          </p>
+        ) : null}
+
         {error && <ErrorBanner message={error} />}
         {pendingNotice && !error && (
           <div className="rounded-xl border border-primary/30 bg-primary-soft/40 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-foreground inline-flex items-start gap-2 w-full">
@@ -311,6 +327,14 @@ export function PaywallCard({
           <Lock className="h-3 w-3" /> Secure checkout via Paddle · Powered by RevenueCat
         </div>
       </div>
+
+      <div
+        ref={checkoutMountRef}
+        className={`fixed inset-0 z-50 bg-background ${
+          purchasing ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        aria-hidden={!purchasing}
+      />
     </div>
   );
 }
