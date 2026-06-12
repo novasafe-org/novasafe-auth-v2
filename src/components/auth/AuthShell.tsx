@@ -26,7 +26,7 @@ export function AuthShell({ kicker, headline, children, topBarAction, footer }: 
   return (
     <div className="min-h-screen w-full bg-background">
       <div className="w-full p-3 md:p-5 lg:p-6">
-        <div className="grid lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)] gap-5 h-[calc(100vh-1.5rem)] md:h-[calc(100vh-2.5rem)] lg:h-[calc(100vh-3rem)]">
+        <div className="grid lg:grid-cols-[minmax(0,8fr)_minmax(0,12fr)] gap-5 h-[calc(100vh-1.5rem)] md:h-[calc(100vh-2.5rem)] lg:h-[calc(100vh-3rem)]">
           <div className="hidden lg:block min-w-0">
             <EditorialPanel kicker={kicker} headline={headline} />
           </div>

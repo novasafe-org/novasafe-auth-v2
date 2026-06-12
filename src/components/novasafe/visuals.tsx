@@ -36,43 +36,44 @@ export function NovaLogo({ compact = false }: { compact?: boolean }) {
 }
 
 /* ---------- Theme toggle ---------- */
-export function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    const saved = typeof window !== "undefined" && localStorage.getItem("nv-theme");
-    const isDark = saved ? saved === "dark" : false;
-    setDark(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
-  }, []);
-  const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("nv-theme", next ? "dark" : "light");
-    } catch {
-      /* localStorage may be unavailable in privacy mode — ignore */
-    }
-  };
-  return (
-    <button
-      onClick={toggle}
-      aria-label="Toggle theme"
-      className="group inline-flex items-center gap-1 rounded-full border border-border bg-card/70 backdrop-blur px-1 py-1 text-xs shadow-xs hover:shadow-sm transition-all"
-    >
-      <span
-        className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${!dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
-      >
-        <Sun className="h-3.5 w-3.5" />
-      </span>
-      <span
-        className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
-      >
-        <Moon className="h-3.5 w-3.5" />
-      </span>
-    </button>
-  );
-}
+// TODO: Not necessary for MVP
+// export function ThemeToggle() {
+//   const [dark, setDark] = useState(false);
+//   useEffect(() => {
+//     const saved = typeof window !== "undefined" && localStorage.getItem("nv-theme");
+//     const isDark = saved ? saved === "dark" : false;
+//     setDark(isDark);
+//     document.documentElement.classList.toggle("dark", isDark);
+//   }, []);
+//   const toggle = () => {
+//     const next = !dark;
+//     setDark(next);
+//     document.documentElement.classList.toggle("dark", next);
+//     try {
+//       localStorage.setItem("nv-theme", next ? "dark" : "light");
+//     } catch {
+//       /* localStorage may be unavailable in privacy mode — ignore */
+//     }
+//   };
+//   return (
+//     <button
+//       onClick={toggle}
+//       aria-label="Toggle theme"
+//       className="group inline-flex items-center gap-1 rounded-full border border-border bg-card/70 backdrop-blur px-1 py-1 text-xs shadow-xs hover:shadow-sm transition-all"
+//     >
+//       <span
+//         className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${!dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
+//       >
+//         <Sun className="h-3.5 w-3.5" />
+//       </span>
+//       <span
+//         className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
+//       >
+//         <Moon className="h-3.5 w-3.5" />
+//       </span>
+//     </button>
+//   );
+// }
 
 /* ---------- Editorial left panel ---------- */
 export function EditorialPanel({ headline, kicker }: { headline: string; kicker: string }) {
@@ -100,11 +101,11 @@ export function EditorialPanel({ headline, kicker }: { headline: string; kicker:
       <FloatingPasskeyCard />
 
       {/* Editorial copy */}
-      <div className="absolute bottom-10 left-8 right-8 max-w-[460px]">
+      <div className="absolute bottom-10 left-6 right-6 max-w-[380px]">
         <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-4">
           {kicker}
         </div>
-        <h2 className="text-[34px] leading-[1.08] font-semibold tracking-tight text-gradient">
+        <h2 className="text-[28px] leading-[1.1] font-semibold tracking-tight text-gradient">
           {headline}
         </h2>
         <p className="mt-4 text-[14px] leading-relaxed text-muted-foreground max-w-md">
@@ -135,7 +136,7 @@ function Stat({ icon: Icon, label }: { icon: React.ElementType; label: string })
 /* ---------- Floating elements ---------- */
 function FloatingVaultCard() {
   return (
-    <div className="absolute right-8 top-24 w-[280px] rounded-2xl border border-border bg-card shadow-lg p-4 anim-float">
+    <div className="absolute right-5 top-20 w-[220px] rounded-2xl border border-border bg-card shadow-lg p-3.5 anim-float">
       <div className="flex items-center gap-3">
         <div className="h-9 w-9 rounded-xl bg-[#0a66c2]/10 flex items-center justify-center">
           <span className="text-[#0a66c2] font-bold text-sm">in</span>
@@ -158,7 +159,7 @@ function FloatingVaultCard() {
 
 function FloatingActivityCard() {
   return (
-    <div className="absolute left-8 top-[42%] w-[260px] rounded-2xl border border-border bg-card shadow-lg p-4 anim-drift">
+    <div className="absolute left-5 top-[42%] w-[200px] rounded-2xl border border-border bg-card shadow-lg p-3.5 anim-drift">
       <div className="flex items-center justify-between mb-3">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           This week
@@ -185,7 +186,7 @@ function FloatingActivityCard() {
 function FloatingPasskeyCard() {
   return (
     <div
-      className="absolute right-12 top-[52%] w-[240px] rounded-2xl border border-border bg-card shadow-lg p-4 anim-float"
+      className="absolute right-6 top-[52%] w-[190px] rounded-2xl border border-border bg-card shadow-lg p-3.5 anim-float"
       style={{ animationDelay: "1.5s" }}
     >
       <div className="flex items-center gap-3">
