@@ -278,15 +278,23 @@ export const billingClient = {
     }
 
     try {
-      const selectedLocale = resolvePurchaseLocale();
+      const product = rcPackage.webBillingProduct;
+      const price = product.price;
+      const purchaseOption = product.defaultPurchaseOption;
+      if (import.meta.env.DEV) {
+        console.info("[billing] purchase attempt", {
+          packageId: rcPackage.identifier,
+          productId: product.identifier,
+          priceId: purchaseOption?.priceId,
+          currency: price?.currency,
+          amountMicros: price?.amountMicros,
+          appUserId,
+        });
+      }
       const purchaseParams: import("@revenuecat/purchases-js").PurchaseParams = {
         rcPackage,
         customerEmail: customerEmail.trim(),
       };
-      if (selectedLocale) {
-        purchaseParams.selectedLocale = selectedLocale;
-        purchaseParams.defaultLocale = selectedLocale;
-      }
       if (htmlTarget && htmlTarget.isConnected && htmlTarget.clientHeight > 0) {
         purchaseParams.htmlTarget = htmlTarget;
       }
@@ -396,14 +404,6 @@ function mapSdkError(mod: PurchasesModule, err: unknown): PurchaseOutcome {
         message: err.message || "Pro signup is misconfigured. Please try again later.",
       };
     }
-    if (err.errorCode === mod.ErrorCode.PurchaseInvalidError) {
-      return {
-        status: "error",
-        code: "payment_failed",
-        message:
-          "Checkout couldn't start. Refresh the page and try again. If this keeps happening, contact support@novasafe.app.",
-      };
-    }
     if (
       backendCode === 7878 ||
       err.errorCode === mod.ErrorCode.ProductNotAvailableForPurchaseError
@@ -412,7 +412,15 @@ function mapSdkError(mod: PurchasesModule, err: unknown): PurchaseOutcome {
         status: "error",
         code: "payment_failed",
         message:
-          "Checkout couldn't be opened. This can happen after a previous subscription expires — wait a few minutes and try again, or email support@novasafe.app for help.",
+          "Paddle checkout could not start (RevenueCat 7878). In Paddle: approve payment domains pay.rev.cat and start.novasafe.io, set default payment link to https://pay.rev.cat, and ensure the RevenueCat API key has Client-side tokens (Write) and Transactions (Write). Then reconnect in RevenueCat → Web → NovaSafe (Paddle).",
+      };
+    }
+    if (err.errorCode === mod.ErrorCode.PurchaseInvalidError) {
+      return {
+        status: "error",
+        code: "payment_failed",
+        message:
+          "Checkout couldn't start. Refresh the page and try again. If this keeps happening, contact support@novasafe.app.",
       };
     }
     return {
