@@ -23,7 +23,7 @@
 #   VITE_REVENUECAT_PACKAGE_MONTHLY           e.g. "$rc_monthly".
 #   VITE_REVENUECAT_PACKAGE_YEARLY            e.g. "$rc_annual".
 
-name: Build Auth App
+name: Build & Deploy Auth App
 
 on:
   push:

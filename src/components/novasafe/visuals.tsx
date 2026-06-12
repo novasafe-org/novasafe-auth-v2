@@ -36,44 +36,43 @@ export function NovaLogo({ compact = false }: { compact?: boolean }) {
 }
 
 /* ---------- Theme toggle ---------- */
-// TODO: Not necessary for MVP
-// export function ThemeToggle() {
-//   const [dark, setDark] = useState(false);
-//   useEffect(() => {
-//     const saved = typeof window !== "undefined" && localStorage.getItem("nv-theme");
-//     const isDark = saved ? saved === "dark" : false;
-//     setDark(isDark);
-//     document.documentElement.classList.toggle("dark", isDark);
-//   }, []);
-//   const toggle = () => {
-//     const next = !dark;
-//     setDark(next);
-//     document.documentElement.classList.toggle("dark", next);
-//     try {
-//       localStorage.setItem("nv-theme", next ? "dark" : "light");
-//     } catch {
-//       /* localStorage may be unavailable in privacy mode — ignore */
-//     }
-//   };
-//   return (
-//     <button
-//       onClick={toggle}
-//       aria-label="Toggle theme"
-//       className="group inline-flex items-center gap-1 rounded-full border border-border bg-card/70 backdrop-blur px-1 py-1 text-xs shadow-xs hover:shadow-sm transition-all"
-//     >
-//       <span
-//         className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${!dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
-//       >
-//         <Sun className="h-3.5 w-3.5" />
-//       </span>
-//       <span
-//         className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
-//       >
-//         <Moon className="h-3.5 w-3.5" />
-//       </span>
-//     </button>
-//   );
-// }
+export function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const saved = typeof window !== "undefined" && localStorage.getItem("nv-theme");
+    const isDark = saved ? saved === "dark" : false;
+    setDark(isDark);
+    document.documentElement.classList.toggle("dark", isDark);
+  }, []);
+  const toggle = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("nv-theme", next ? "dark" : "light");
+    } catch {
+      /* localStorage may be unavailable in privacy mode — ignore */
+    }
+  };
+  return (
+    <button
+      onClick={toggle}
+      aria-label="Toggle theme"
+      className="group inline-flex items-center gap-1 rounded-full border border-border bg-card/70 backdrop-blur px-1 py-1 text-xs shadow-xs hover:shadow-sm transition-all"
+    >
+      <span
+        className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${!dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
+      >
+        <Sun className="h-3.5 w-3.5" />
+      </span>
+      <span
+        className={`h-7 w-7 rounded-full inline-flex items-center justify-center transition-all ${dark ? "bg-secondary text-foreground shadow-xs" : "text-muted-foreground"}`}
+      >
+        <Moon className="h-3.5 w-3.5" />
+      </span>
+    </button>
+  );
+}
 
 /* ---------- Editorial left panel ---------- */
 export function EditorialPanel({ headline, kicker }: { headline: string; kicker: string }) {
