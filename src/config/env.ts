@@ -28,20 +28,34 @@ const procEnv: EnvRecord =
 
 const isServer = typeof window === "undefined";
 
+declare global {
+  interface Window {
+    __NS_PUBLIC_ENV__?: Record<string, string>;
+    __NS_GOOGLE_CLIENT_ID__?: string;
+  }
+}
+
+function readRuntimeInjected(key: string): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const value = window.__NS_PUBLIC_ENV__?.[key];
+  return value != null && value !== "" ? value : undefined;
+}
+
 /**
- * Read a single env value from Vite's build-time bundle and/or live process env.
+ * Read a single env value from runtime injection, Vite build bundle, and/or process env.
  *
- * On the SSR server we prefer `process.env` first so docker-compose / `.env`
- * overrides always win over values baked into `import.meta.env` at build time
- * (empty CI secrets previously inlined as `""` and blocked fallbacks).
- *
- * In the browser we prefer `import.meta.env` first (the only source that
- * exists client-side).
+ * SSR prefers `process.env` (server `.env` via docker-compose).
+ * Browser prefers `window.__NS_PUBLIC_ENV__` (injected by SSR shell) over build-time values.
  */
 export function readEnv(key: string, ...aliases: string[]): string | undefined {
   const candidates = [key, ...aliases];
 
   for (const candidate of candidates) {
+    if (!isServer) {
+      const fromRuntime = readRuntimeInjected(candidate);
+      if (fromRuntime != null) return fromRuntime;
+    }
+
     if (isServer) {
       const fromProc = procEnv[candidate];
       if (fromProc != null && fromProc !== "") return fromProc;
@@ -96,7 +110,7 @@ const DEFAULT_PUBLIC_URLS = Object.freeze({
   AUTH_URL: "https://start.novasafe.io",
   LANDING_URL: "https://novasafe.io",
   APP_URL: "https://app.novasafe.io",
-  API_URL: "https://api.novasafe.io",
+  API_URL: "https://mobile-api.novasafe.io",
 });
 
 /* ------------------------------------------------------------------------- */

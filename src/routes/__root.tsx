@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { env } from "@/config/env";
+import { buildBrowserRuntimeEnvScript } from "@/config/runtime-public-env";
 
 function NotFoundComponent() {
   return (
@@ -103,19 +104,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  const googleClientId = env.GOOGLE_WEB_CLIENT_ID;
-  const runtimeEnvScript =
-    googleClientId.length > 0
-      ? `window.__NS_GOOGLE_CLIENT_ID__=${JSON.stringify(googleClientId)};`
-      : "";
+  const runtimeEnvScript = buildBrowserRuntimeEnvScript(env);
 
   return (
     <html lang="en">
       <head>
         <HeadContent />
-        {runtimeEnvScript ? (
-          <script dangerouslySetInnerHTML={{ __html: runtimeEnvScript }} />
-        ) : null}
+        <script dangerouslySetInnerHTML={{ __html: runtimeEnvScript }} />
       </head>
       <body>
         {children}

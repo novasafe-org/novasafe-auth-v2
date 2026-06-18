@@ -1,16 +1,10 @@
 import { authConfig } from "@/config";
 
-declare global {
-  interface Window {
-    __NS_GOOGLE_CLIENT_ID__?: string;
-  }
-}
-
-/** Google web client id — build-time value with optional runtime override from SSR shell. */
+/** Google web client id — runtime server .env with optional build-time fallback. */
 export function getGoogleWebClientId(): string {
   if (typeof window !== "undefined") {
-    const runtime = window.__NS_GOOGLE_CLIENT_ID__?.trim();
-    if (runtime) return runtime;
+    const fromRuntime = window.__NS_PUBLIC_ENV__?.VITE_GOOGLE_WEB_CLIENT_ID?.trim();
+    if (fromRuntime) return fromRuntime;
   }
   return authConfig.google.webClientId.trim();
 }

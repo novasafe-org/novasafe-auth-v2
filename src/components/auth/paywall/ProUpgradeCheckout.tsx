@@ -51,7 +51,8 @@ export function ProUpgradeCheckout({
       <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
         <h1 className="text-xl font-semibold">Web billing isn't configured yet</h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Set VITE_REVENUECAT_PUBLIC_API_KEY_WEB in novasafe-auth-v2, rebuild, and redeploy.
+          Set VITE_REVENUECAT_PUBLIC_API_KEY_WEB in the server .env
+          (/opt/novasafe-deployment/platform/auth/.env), then restart the auth container.
         </p>
         <PrimaryButton type="button" onClick={() => onComplete({ status: "skipped", reason: "configuration-missing" })}>
           Return to billing <ArrowRight className="h-4 w-4" />

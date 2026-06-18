@@ -375,7 +375,7 @@ function ConfigurationMissing({ onSkipToFree }: { onSkipToFree: () => void }) {
       <Title
         eyebrow="Pro plan"
         title="Web billing isn't configured yet."
-        sub="Set VITE_REVENUECAT_PUBLIC_API_KEY_WEB in novasafe-auth-v2 (RevenueCat → Project → Web billing → Public API key), rebuild, and redeploy. Until then, Pro checkout and subscription management are unavailable."
+        sub="Set VITE_REVENUECAT_PUBLIC_API_KEY_WEB in the server .env (/opt/novasafe-deployment/platform/auth/.env), then restart the auth container. Until then, Pro checkout and subscription management are unavailable."
       />
       <PrimaryButton type="button" onClick={onSkipToFree}>
         Return to the app <ArrowRight className="h-4 w-4" />
