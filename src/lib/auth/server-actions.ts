@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ApiError, authApi, subscriptionsApi, type AuthUser } from "@/lib/api";
 import { buildAppUrl, resolvePostAuthRedirect } from "@/config";
+import { parseActionInput } from "./action-errors";
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from "./session.server";
 
 /**
@@ -127,7 +128,7 @@ function toApiErrorResult(err: unknown): LoginResult {
  * redirect URL (cross-subdomain to the app).
  */
 export const loginAction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => loginSchema.parse(input))
+  .inputValidator((input: unknown) => parseActionInput(loginSchema, input))
   .handler(async ({ data }): Promise<LoginResult> => {
     try {
       const response = await authApi.login({
@@ -169,7 +170,7 @@ export const loginAction = createServerFn({ method: "POST" })
  * `two-factor-required`. Sets the session cookie on success.
  */
 export const verifyTwoFactorAction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => verifyTwoFactorSchema.parse(input))
+  .inputValidator((input: unknown) => parseActionInput(verifyTwoFactorSchema, input))
   .handler(async ({ data }): Promise<LoginResult> => {
     try {
       const response = await authApi.verifyTwoFactor({
@@ -205,7 +206,7 @@ export const verifyTwoFactorAction = createServerFn({ method: "POST" })
  * core backend, then writes our HttpOnly session cookie (same as email login).
  */
 export const googleLoginAction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => googleLoginSchema.parse(input))
+  .inputValidator((input: unknown) => parseActionInput(googleLoginSchema, input))
   .handler(async ({ data }): Promise<GoogleLoginResult> => {
     try {
       const response = await authApi.loginWithGoogle({

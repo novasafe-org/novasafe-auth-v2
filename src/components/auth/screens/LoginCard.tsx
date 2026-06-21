@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { ArrowRight, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
 
 import { loginAction, googleLoginAction, type LoginResult } from "@/lib/auth";
+import { toAuthActionMessage, isExpectedAuthClientError } from "@/lib/auth/action-errors";
 import { getGoogleWebClientId, isGoogleSignInEnabled } from "@/lib/auth/google-config";
 import { requestGoogleIdToken } from "@/lib/auth/google";
 import {
@@ -32,13 +33,28 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError("Enter a valid email address");
+      return;
+    }
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+
     setLoading(true);
     let result: LoginResult;
     try {
-      result = await loginAction({ data: { email, password, next: next ?? null } });
+      result = await loginAction({ data: { email: trimmedEmail, password, next: next ?? null } });
     } catch (err) {
-      console.error("[LoginCard] login action failed", err);
-      setError("We couldn't reach the sign-in service. Try again in a moment.");
+      if (import.meta.env.DEV && !isExpectedAuthClientError(err)) {
+        console.error("[LoginCard] login action failed", err);
+      }
+      setError(
+        toAuthActionMessage(err, "Something went wrong. Try again in a moment."),
+      );
       setLoading(false);
       return;
     }
@@ -93,8 +109,10 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
       }
       setError(result.message);
     } catch (err) {
-      console.error("[LoginCard] Google sign-in failed", err);
-      setError("Google sign-in was cancelled or unavailable. Try again.");
+      if (import.meta.env.DEV && !isExpectedAuthClientError(err)) {
+        console.error("[LoginCard] Google sign-in failed", err);
+      }
+      setError(toAuthActionMessage(err, "Google sign-in was cancelled or unavailable. Try again."));
     } finally {
       setGoogleLoading(false);
     }

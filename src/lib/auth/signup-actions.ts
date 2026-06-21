@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ApiError, authApi, onboardingApi, type AuthUser } from "@/lib/api";
 import { resolvePostAuthRedirect } from "@/config";
+import { parseActionInput } from "./action-errors";
 import { writeSessionCookie } from "./session.server";
 
 /**
@@ -77,7 +78,7 @@ const completeSignupInput = z.object({
  * real failure (e.g. duplicate email) at `completeSignupAction` time.
  */
 export const checkSignupEmailAction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => checkEmailInput.parse(input))
+  .inputValidator((input: unknown) => parseActionInput(checkEmailInput, input))
   .handler(async ({ data }): Promise<CheckEmailResult> => {
     try {
       const response = await onboardingApi.checkEmail(data.email);
@@ -96,7 +97,7 @@ export const checkSignupEmailAction = createServerFn({ method: "POST" })
  * password step) and the resend button on the OTP step.
  */
 export const requestSignupOtpAction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => requestOtpInput.parse(input))
+  .inputValidator((input: unknown) => parseActionInput(requestOtpInput, input))
   .handler(async ({ data }): Promise<RequestOtpResult> => {
     try {
       const response = await onboardingApi.sendOtp(data.email);
@@ -132,7 +133,7 @@ export const requestSignupOtpAction = createServerFn({ method: "POST" })
  * appropriate UI state without losing their input.
  */
 export const completeSignupAction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => completeSignupInput.parse(input))
+  .inputValidator((input: unknown) => parseActionInput(completeSignupInput, input))
   .handler(async ({ data }): Promise<CompleteSignupResult> => {
     try {
       try {

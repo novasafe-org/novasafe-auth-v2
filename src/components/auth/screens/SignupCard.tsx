@@ -6,6 +6,7 @@ import {
   type CompleteSignupResult,
   type RequestOtpResult,
 } from "@/lib/auth";
+import { toAuthActionMessage, isExpectedAuthClientError } from "@/lib/auth/action-errors";
 import { Section, Title } from "@/components/auth/primitives";
 import { IdentityStep } from "@/components/auth/signup/IdentityStep";
 import { PasswordStep } from "@/components/auth/signup/PasswordStep";
@@ -69,10 +70,12 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
       try {
         result = await requestSignupOtpAction({ data: { email: stage.email } });
       } catch (err) {
-        console.error("[SignupCard] requestSignupOtpAction failed", err);
+        if (import.meta.env.DEV && !isExpectedAuthClientError(err)) {
+          console.error("[SignupCard] requestSignupOtpAction failed", err);
+        }
         setStage({
           ...stage,
-          passwordError: "We couldn't send your verification code. Try again in a moment.",
+          passwordError: toAuthActionMessage(err, "We couldn't send your verification code. Try again."),
         });
         return false;
       }
@@ -116,10 +119,12 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
           },
         });
       } catch (err) {
-        console.error("[SignupCard] completeSignupAction failed", err);
+        if (import.meta.env.DEV && !isExpectedAuthClientError(err)) {
+          console.error("[SignupCard] completeSignupAction failed", err);
+        }
         setStage({
           ...stage,
-          otpError: "We couldn't reach the signup service. Try again in a moment.",
+          otpError: toAuthActionMessage(err, "Something went wrong. Try again in a moment."),
           otpNotice: null,
         });
         return false;
@@ -172,10 +177,12 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
     try {
       result = await requestSignupOtpAction({ data: { email: stage.email } });
     } catch (err) {
-      console.error("[SignupCard] resend OTP failed", err);
+      if (import.meta.env.DEV && !isExpectedAuthClientError(err)) {
+        console.error("[SignupCard] resend OTP failed", err);
+      }
       setStage({
         ...stage,
-        otpError: "We couldn't resend the code. Try again in a moment.",
+        otpError: toAuthActionMessage(err, "We couldn't resend the code. Try again."),
         otpNotice: null,
       });
       return { ok: false };

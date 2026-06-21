@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ArrowLeft, Check, Mail, RefreshCw } from "lucide-react";
 
 import { verifyTwoFactorAction, type LoginResult } from "@/lib/auth";
+import { toAuthActionMessage, isExpectedAuthClientError } from "@/lib/auth/action-errors";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { ErrorBanner, PrimaryButton, Section, Title } from "@/components/auth/primitives";
 
@@ -40,8 +41,10 @@ export function TwoFactorCard({ email, next, onBack }: TwoFactorCardProps) {
         data: { email, code, next: next ?? null },
       });
     } catch (err) {
-      console.error("[TwoFactorCard] verify action failed", err);
-      setError("We couldn't reach the verification service. Try again in a moment.");
+      if (import.meta.env.DEV && !isExpectedAuthClientError(err)) {
+        console.error("[TwoFactorCard] verify action failed", err);
+      }
+      setError(toAuthActionMessage(err, "Something went wrong. Try again in a moment."));
       setLoading(false);
       return;
     }
