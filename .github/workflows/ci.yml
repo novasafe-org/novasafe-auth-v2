@@ -1,0 +1,23 @@
+# Gitleaks → Trivy → build → push → deploy (single pipeline)
+#
+# Env on VPS: /opt/novasafe-deployment/platform/auth/.env
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  pipeline:
+    uses: novasafe-org/novasafe-deployment/.github/workflows/docker-ci.yml@master
+    with:
+      app_title: NovaSafe Auth
+      repository_name: novasafe-auth-v2
+      deploy_service: auth
+    secrets: inherit
