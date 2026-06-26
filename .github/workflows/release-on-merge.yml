@@ -1,0 +1,15 @@
+# Ticket-based release when PRs merge to main.
+# Semver bump comes from ticket labels (type:feature, type:fix), not commit messages.
+
+name: Release on merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main, master]
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    uses: novasafe-org/novasafe-deployment/.github/workflows/release-on-merge.yml@master
+    secrets: inherit
