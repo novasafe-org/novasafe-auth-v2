@@ -26,10 +26,15 @@ import {
   FileText,
 } from "lucide-react";
 import { EditorialPanel, NovaLogo, ThemeToggle } from "./visuals";
+import {
+  confirmPasswordResetAction,
+  requestPasswordResetAction,
+} from "@/lib/auth/password-reset-actions";
 
 type Step =
   | "login"
   | "forgot"
+  | "resetPassword"
   | "resetSuccess"
   | "signup"
   | "password"
@@ -46,6 +51,10 @@ const COPY: Record<Step, { kicker: string; headline: string }> = {
   forgot: {
     kicker: "Account recovery",
     headline: "Recovery, the way it should be — private and effortless.",
+  },
+  resetPassword: {
+    kicker: "Set new password",
+    headline: "Choose a new master password for your account.",
   },
   resetSuccess: { kicker: "All set", headline: "Your access is restored. Quietly and securely." },
   signup: { kicker: "Create account", headline: "A calmer place for your digital identity." },
@@ -110,6 +119,9 @@ export function AuthFlow() {
                   {step === "password" && <PasswordScreen email={email} go={go} />}
                   {step === "otp" && <OtpScreen email={email} go={go} />}
                   {step === "forgot" && <ForgotScreen email={email} setEmail={setEmail} go={go} />}
+                  {step === "resetPassword" && (
+                    <ResetPasswordScreen email={email} go={go} />
+                  )}
                   {step === "resetSuccess" && <ResetSuccess go={go} />}
                   {step === "signup" && (
                     <SignupScreen
@@ -590,6 +602,7 @@ function ForgotScreen({
   go: (s: Step) => void;
 }) {
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [method, setMethod] = useState(0);
   return (
     <Section>
@@ -602,7 +615,7 @@ function ForgotScreen({
 
       <div className="grid gap-2">
         {[
-          { icon: Mail, title: "Email recovery link", desc: "Send a magic link to your inbox" },
+          { icon: Mail, title: "Email recovery code", desc: "Send a one-time code to your inbox" },
           { icon: KeyRound, title: "Recovery key file", desc: "Use the encrypted PDF you saved" },
           { icon: Fingerprint, title: "Passkey or biometric", desc: "Use a trusted device" },
         ].map((opt, i) => (
@@ -620,8 +633,25 @@ function ForgotScreen({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (method !== 0) {
+            setError("Only email recovery is available right now.");
+            return;
+          }
           setSent(true);
-          setTimeout(() => go("resetSuccess"), 1000);
+          setError(null);
+          void requestPasswordResetAction({ data: { email } })
+            .then((result) => {
+              if (!result.success) {
+                setError(result.message ?? "Could not send reset code.");
+                setSent(false);
+                return;
+              }
+              go("resetPassword");
+            })
+            .catch(() => {
+              setError("Could not send reset code.");
+              setSent(false);
+            });
         }}
         className="space-y-4"
       >
@@ -634,9 +664,93 @@ function ForgotScreen({
             onChange={(e) => setEmail(e.target.value)}
           />
         </Field>
+        {error && <p className="text-[12px] text-destructive">{error}</p>}
         <PrimaryButton loading={sent}>
-          {sent ? "Sending secure link…" : "Send recovery link"}
+          {sent ? "Sending code…" : "Send recovery code"}
         </PrimaryButton>
+      </form>
+    </Section>
+  );
+}
+
+function ResetPasswordScreen({
+  email,
+  go,
+}: {
+  email: string;
+  go: (s: Step) => void;
+}) {
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Section>
+      <BackBtn onClick={() => go("forgot")} />
+      <Title
+        eyebrow="New password"
+        title="Set a new master password"
+        sub={`Enter the code sent to ${email || "your email"}.`}
+      />
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (password !== confirm) {
+            setError("Passwords do not match.");
+            return;
+          }
+          setLoading(true);
+          setError(null);
+          void confirmPasswordResetAction({
+            data: { email, otp, newPassword: password },
+          })
+            .then((result) => {
+              if (!result.success) {
+                setError(result.message ?? "Could not reset password.");
+                setLoading(false);
+                return;
+              }
+              go("resetSuccess");
+            })
+            .catch(() => {
+              setError("Could not reset password.");
+              setLoading(false);
+            });
+        }}
+        className="space-y-4"
+      >
+        <Field label="Recovery code">
+          <Input
+            required
+            inputMode="numeric"
+            placeholder="6-digit code"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+          />
+        </Field>
+        <Field label="New password">
+          <Input
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Field>
+        <Field label="Confirm password">
+          <Input
+            type="password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+        </Field>
+        {error && <p className="text-[12px] text-destructive">{error}</p>}
+        <PrimaryButton loading={loading}>Update password</PrimaryButton>
       </form>
     </Section>
   );

@@ -14,8 +14,8 @@ import { writeSessionCookie } from "./session.server";
  * Backend contract — `services/core/.../onboarding.routes.ts`:
  *   1. POST /api/v1/onboarding/check-email   { email }                       → { exists }
  *   2. POST /api/v1/onboarding/send-otp      { email }                       → { success, message }
- *   3. POST /api/v1/onboarding/verify-otp    { email, otp }                  → 200 ok | 400 invalid
- *   4. POST /api/v1/onboarding/create-account{ email, fullName, password }   → 201 ok | 409 taken
+ *   3. POST /api/v1/onboarding/verify-otp    { email, otp }                  → 200 + signupProofToken
+ *   4. POST /api/v1/onboarding/create-account{ email, fullName, password, signupProofToken }
  *   5. POST /api/v1/auth/login               { email, password }             → 200 token + user
  */
 
@@ -136,8 +136,16 @@ export const completeSignupAction = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => parseActionInput(completeSignupInput, input))
   .handler(async ({ data }): Promise<CompleteSignupResult> => {
     try {
+      let signupProofToken: string | undefined;
       try {
-        await onboardingApi.verifyOtp(data.email, data.otp);
+        const verified = await onboardingApi.verifyOtp(data.email, data.otp);
+        signupProofToken = verified.signupProofToken;
+        if (!signupProofToken) {
+          return {
+            status: "error",
+            message: "Email verification did not complete. Request a new code and try again.",
+          };
+        }
       } catch (err) {
         if (err instanceof ApiError && err.status === 400) {
           return { status: "invalid-otp", message: err.message || "That code didn't match." };
@@ -150,6 +158,7 @@ export const completeSignupAction = createServerFn({ method: "POST" })
           email: data.email,
           fullName: data.fullName,
           password: data.password,
+          signupProofToken,
         });
       } catch (err) {
         if (err instanceof ApiError && err.status === 409) {

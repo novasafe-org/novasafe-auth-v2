@@ -179,6 +179,34 @@ export const authApi = {
     });
   },
 
+  createExtensionPairingHandoff(
+    payload: { installationId: string; state: string },
+    webSessionToken: string,
+  ) {
+    return apiFetch<{ success: boolean; pairingCode?: string; message?: string; code?: string }>(
+      `${PREFIX}/extension/pairing-handoff`,
+      {
+        method: "POST",
+        body: payload,
+        token: webSessionToken,
+      },
+    );
+  },
+
+  requestPasswordReset(payload: { email: string }) {
+    return apiFetch<{ success: boolean; message?: string }>(`${PREFIX}/password-reset/request`, {
+      method: "POST",
+      body: payload,
+    });
+  },
+
+  confirmPasswordReset(payload: { email: string; otp: string; newPassword: string }) {
+    return apiFetch<{ success: boolean; message?: string }>(`${PREFIX}/password-reset/confirm`, {
+      method: "POST",
+      body: payload,
+    });
+  },
+
   logout(token: string) {
     return apiFetch<{ success: boolean; message?: string }>(`${PREFIX}/logout`, {
       method: "POST",

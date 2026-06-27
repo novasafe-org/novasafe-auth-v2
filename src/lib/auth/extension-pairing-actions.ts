@@ -38,7 +38,7 @@ export type ExtensionPairResult =
 
 /**
  * Creates a dedicated extension session via Core and returns a redirect URL
- * with the access token in the fragment (extension SW reads it once, never shown in UI).
+ * with a one-time pairing code in the fragment (extension SW redeems over HTTPS).
  */
 export const completeExtensionPairingAction = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => pairSchema.parse(data))
@@ -67,18 +67,15 @@ export const completeExtensionPairingAction = createServerFn({ method: "POST" })
     }
 
     try {
-      const response = await authApi.pairExtension(
+      const response = await authApi.createExtensionPairingHandoff(
         {
           installationId: data.installId,
-          deviceModel: `${data.browser ?? "Browser"} Extension`,
-          devicePlatform: data.platform ?? "extension",
-          deviceOsVersion: data.browserVersion,
-          extensionVersion: data.extensionVersion,
+          state: data.state,
         },
         webToken,
       );
 
-      if (!response.success || !response.accessToken) {
+      if (!response.success || !response.pairingCode) {
         return {
           status: "error",
           message: response.message ?? "Could not authorize the extension.",
@@ -88,14 +85,12 @@ export const completeExtensionPairingAction = createServerFn({ method: "POST" })
 
       const redirectUrl = new URL(data.redirectUri);
       const hash = new URLSearchParams({
-        access_token: response.accessToken,
+        pairing_code: response.pairingCode,
         state: data.state,
-        token_type: "Bearer",
-        expires_in: String(7 * 24 * 60 * 60),
       });
       redirectUrl.hash = hash.toString();
 
-      extensionPairingLog("Token Received", { redirectHost: redirectUrl.hostname });
+      extensionPairingLog("Pairing code issued", { redirectHost: redirectUrl.hostname });
       extensionPairingLog("Pairing Completed");
 
       return { status: "success", extensionRedirectTo: redirectUrl.toString() };

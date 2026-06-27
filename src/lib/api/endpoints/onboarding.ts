@@ -32,12 +32,14 @@ export interface VerifyOtpResponse {
   success: boolean;
   source?: string;
   message: string;
+  signupProofToken?: string;
 }
 
 export interface CreateAccountPayload {
   email: string;
   fullName: string;
   password: string;
+  signupProofToken: string;
 }
 
 export interface CreateAccountResponse {
