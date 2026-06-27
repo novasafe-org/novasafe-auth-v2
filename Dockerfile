@@ -46,15 +46,18 @@ RUN --mount=type=cache,id=pnpm-store-auth,target=/root/.local/share/pnpm/store \
 COPY . .
 RUN pnpm build
 
-RUN --mount=type=cache,id=pnpm-store-auth,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --prod --ignore-scripts
+RUN rm -rf node_modules \
+    && pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # -----------------------------------------------------------------------------
 # Stage 2 — runner
 # -----------------------------------------------------------------------------
 FROM node:22-alpine AS runner
 
-RUN apk add --no-cache tini wget
+RUN apk upgrade --no-cache \
+    && apk add --no-cache tini wget \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+       /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 
 WORKDIR /app
 
@@ -62,10 +65,10 @@ ENV NODE_ENV=production \
     PORT=3101 \
     HOSTNAME=0.0.0.0
 
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/bin ./bin
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3101
 
