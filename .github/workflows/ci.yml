@@ -15,6 +15,9 @@ on:
 
 jobs:
   pipeline:
+    permissions:
+      contents: read
+      packages: write
     uses: novasafe-org/novasafe-deployment/.github/workflows/docker-ci.yml@master
     with:
       app_title: NovaSafe Auth
