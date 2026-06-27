@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1 — builder
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 ARG APP_VERSION=1.0.0
 ARG BUILD_NUMBER=unknown
@@ -52,7 +52,7 @@ RUN rm -rf node_modules \
 # -----------------------------------------------------------------------------
 # Stage 2 — runner
 # -----------------------------------------------------------------------------
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 
 RUN apk upgrade --no-cache \
     && apk add --no-cache tini wget \
