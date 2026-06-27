@@ -135,3 +135,14 @@ jobs:
       caller_repo: ${{ github.repository }}
       caller_ref: ${{ github.ref_name }}@${{ github.sha }}
     secrets: inherit
+
+  github-release:
+    name: GitHub Release
+    needs: deploy
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+    uses: novasafe-org/novasafe-deployment/.github/workflows/publish-github-release.yml@master
+    with:
+      package-json: package.json
+      changelog-path: CHANGELOG.md
