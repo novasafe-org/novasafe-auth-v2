@@ -30,7 +30,7 @@ if (existsSync(vendorDir)) {
 }
 
 const repo = process.env.NOVASAFE_BACKEND_REPO ?? "https://github.com/novasafe-org/novasafe-backend.git";
-const ref = process.env.NOVASAFE_BACKEND_REF ?? "main";
+const ref = process.env.NOVASAFE_BACKEND_REF ?? "master";
 const tmp = resolve(root, ".tmp-feature-flags-sync");
 
 try {
