@@ -43,11 +43,11 @@ ENV NODE_ENV=production \
 COPY package.json pnpm-lock.yaml .npmrc ./
 COPY scripts/sync-feature-flags-catalog.mjs scripts/sync-feature-flags-catalog.mjs
 RUN --mount=type=cache,id=pnpm-store-auth,target=/root/.local/share/pnpm/store \
-    SKIP_FEATURE_FLAG_COMPILE=1 node scripts/sync-feature-flags-catalog.mjs \
+    FORCE_FEATURE_FLAG_REVENDOR=1 node scripts/sync-feature-flags-catalog.mjs \
     && pnpm install --frozen-lockfile
 
 COPY . .
-RUN node scripts/sync-feature-flags-catalog.mjs \
+RUN FORCE_FEATURE_FLAG_REVENDOR=1 node scripts/sync-feature-flags-catalog.mjs \
     && pnpm install --frozen-lockfile \
     && pnpm build
 
