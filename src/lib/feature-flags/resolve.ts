@@ -1,4 +1,4 @@
-import { buildProductionSafeDefaults, isFlagEnabled } from "./defaults";
+import { buildProductionSafeDefaults, isFlagEnabled, FEATURE_FLAG_CATALOG_VERSION } from "./defaults";
 import { readDevFlagOverride } from "./dev-override";
 import { readCachedFeatureFlags } from "./storage";
 import type { FeatureFlagSource, FeatureFlagsSnapshot, PlatformFeatureFlagPayload } from "./types";
@@ -48,7 +48,10 @@ export function resolveBootstrapSnapshot(
   }
 
   return {
-    snapshot: { version: "catalog-defaults", flags: buildProductionSafeDefaults() },
+    snapshot: {
+      version: FEATURE_FLAG_CATALOG_VERSION,
+      flags: buildProductionSafeDefaults(),
+    },
     source: "defaults",
   };
 }

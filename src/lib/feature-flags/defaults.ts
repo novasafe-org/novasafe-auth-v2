@@ -1,28 +1,18 @@
-import type { FeatureFlagKey } from "./types";
+import {
+  buildDefaultFeatureFlagSnapshot,
+  FEATURE_FLAG_CATALOG_VERSION,
+  type FeatureFlagKey,
+} from "@novasafe/feature-flags";
 
-/** Parked product flags — safe production default when API/cache unavailable. */
-export const PARKED_PRODUCT_FLAGS: readonly FeatureFlagKey[] = [
-  "passkeys",
-  "otp",
-  "teams",
-  "enterprise",
-  "sharing_v2",
-  "audit_logs",
-  "admin_console",
-  "browser_extension_v2",
-  "activity_logs",
-  "scim",
-  "sso",
-];
+export type { FeatureFlagKey };
 
+/** Offline / first-load defaults — derived from backend catalog (production). */
 export function buildProductionSafeDefaults(): Record<string, boolean> {
-  const flags: Record<string, boolean> = {};
-  for (const key of PARKED_PRODUCT_FLAGS) {
-    flags[key] = false;
-  }
-  return flags;
+  return { ...buildDefaultFeatureFlagSnapshot("production").flags };
 }
 
 export function isFlagEnabled(flags: Record<string, boolean>, key: string): boolean {
   return flags[key] === true;
 }
+
+export { FEATURE_FLAG_CATALOG_VERSION };

@@ -1,16 +1,4 @@
-/** Catalog keys used for client UI gating (subset — unknown keys default false). */
-export type FeatureFlagKey =
-  | "passkeys"
-  | "otp"
-  | "teams"
-  | "enterprise"
-  | "sharing_v2"
-  | "audit_logs"
-  | "admin_console"
-  | "browser_extension_v2"
-  | "activity_logs"
-  | "scim"
-  | "sso";
+export type { FeatureFlagKey } from "@novasafe/feature-flags";
 
 export interface PlatformFeatureFlagPayload {
   version: string;
