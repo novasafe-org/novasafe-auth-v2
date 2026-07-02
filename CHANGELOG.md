@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0
+
+### Added
+
+NS-55 Feature flag platform
+
 ## v1.0.0
 
 ### Added
