@@ -8,6 +8,11 @@ on:
     types: [closed]
     branches: [main, master]
 
+permissions:
+  contents: write
+  pull-requests: read
+  issues: read
+
 jobs:
   release:
     if: github.event.pull_request.merged == true
