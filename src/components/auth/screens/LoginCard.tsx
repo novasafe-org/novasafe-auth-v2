@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
+import { ArrowRight, Building2, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
 
 import { loginAction, googleLoginAction, type LoginResult } from "@/lib/auth";
 import { toAuthActionMessage, isExpectedAuthClientError } from "@/lib/auth/action-errors";
+import { useFeatureFlag } from "@/lib/feature-flags";
 import { getGoogleWebClientId, isGoogleSignInEnabled } from "@/lib/auth/google-config";
 import { requestGoogleIdToken } from "@/lib/auth/google";
 import {
@@ -23,6 +24,9 @@ interface LoginCardProps {
 }
 
 export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
+  const ssoEnabled = useFeatureFlag("sso");
+  const enterpriseEnabled = useFeatureFlag("enterprise");
+  const showEnterpriseSignIn = ssoEnabled || enterpriseEnabled;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -202,6 +206,21 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
           )}
         </PrimaryButton>
       </form>
+
+      {showEnterpriseSignIn && (
+        <>
+          <Divider label="organization" />
+          <button
+            type="button"
+            disabled
+            className="w-full h-11 rounded-[10px] bg-card border border-border text-[13px] font-medium inline-flex items-center justify-center gap-2.5 shadow-xs opacity-80 cursor-not-allowed"
+            title="Enterprise SSO sign-in launches when the feature flag is enabled in production"
+          >
+            <Building2 className="h-4 w-4" />
+            Continue with SSO
+          </button>
+        </>
+      )}
     </Section>
   );
 }

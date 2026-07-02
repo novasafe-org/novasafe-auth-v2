@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { env } from "@/config/env";
 import { buildBrowserRuntimeEnvScript } from "@/config/runtime-public-env";
+import { FeatureFlagsProvider } from "@/lib/feature-flags";
 
 function NotFoundComponent() {
   return (
@@ -125,7 +126,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <FeatureFlagsProvider authenticated>
+        <Outlet />
+      </FeatureFlagsProvider>
     </QueryClientProvider>
   );
 }

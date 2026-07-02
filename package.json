@@ -6,6 +6,9 @@
   "type": "module",
   "packageManager": "pnpm@10.18.2",
   "scripts": {
+    "preinstall": "node scripts/sync-feature-flags-catalog.mjs",
+    "catalog:sync": "node scripts/sync-feature-flags-catalog.mjs",
+    "predev": "node scripts/sync-feature-flags-catalog.mjs",
     "dev": "vite dev",
     "prebuild": "node scripts/versioning/generate-build-metadata.mjs --out public",
     "build": "vite build",
@@ -17,6 +20,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@novasafe/feature-flags": "file:./vendor/feature-flags",
     "srvx": "^0.11.16"
   },
   "devDependencies": {
