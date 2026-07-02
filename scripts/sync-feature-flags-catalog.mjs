@@ -30,13 +30,25 @@ if (existsSync(vendorDir)) {
 }
 
 const repo = process.env.NOVASAFE_BACKEND_REPO ?? "https://github.com/novasafe-org/novasafe-backend.git";
-const ref = process.env.NOVASAFE_BACKEND_REF ?? "main";
+// Catalog ships on the NS-55 epic branch until merged to master; override via NOVASAFE_BACKEND_REF.
+const ref = process.env.NOVASAFE_BACKEND_REF ?? "feature/NS-epic-feature-flags";
 const tmp = resolve(root, ".tmp-feature-flags-sync");
+
+const cloneArgs = [
+  "clone",
+  "--depth",
+  "1",
+  "--filter=blob:none",
+  "--sparse",
+  ...(ref ? ["--branch", ref] : []),
+  repo,
+  "repo",
+];
 
 try {
   rmSync(tmp, { recursive: true, force: true });
   mkdirSync(tmp, { recursive: true });
-  execSync(`git clone --depth 1 --branch ${ref} --filter=blob:none --sparse ${repo} repo`, {
+  execSync(`git ${cloneArgs.join(" ")}`, {
     cwd: tmp,
     stdio: "inherit",
   });
