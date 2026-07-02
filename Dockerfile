@@ -43,11 +43,13 @@ ENV NODE_ENV=production \
 COPY package.json pnpm-lock.yaml .npmrc ./
 COPY scripts/sync-feature-flags-catalog.mjs scripts/sync-feature-flags-catalog.mjs
 RUN --mount=type=cache,id=pnpm-store-auth,target=/root/.local/share/pnpm/store \
-    node scripts/sync-feature-flags-catalog.mjs \
+    SKIP_FEATURE_FLAG_COMPILE=1 node scripts/sync-feature-flags-catalog.mjs \
     && pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm build
+RUN node scripts/sync-feature-flags-catalog.mjs \
+    && pnpm install --frozen-lockfile \
+    && pnpm build
 
 RUN rm -rf node_modules \
     && pnpm install --frozen-lockfile --prod --ignore-scripts
@@ -71,6 +73,7 @@ ENV NODE_ENV=production \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/bin ./bin
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/vendor ./vendor
 COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3101
