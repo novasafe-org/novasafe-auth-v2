@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { apiFetch } from "@/lib/api/http";
 import { readSessionToken } from "@/lib/auth/session.server";
 
+import { resolveFeatureFlagEnvironment } from "./environment";
 import type { PlatformFeatureFlagPayload } from "./types";
 
 type FeatureFlagsApiResponse = {
@@ -10,19 +11,22 @@ type FeatureFlagsApiResponse = {
   data?: PlatformFeatureFlagPayload;
 };
 
-/** Authenticated fetch against mobile-api read-only feature flags endpoint. */
+/** Loads feature flags from mobile-api (authenticated or public endpoint). */
 export const fetchPlatformFeatureFlagsAction = createServerFn({ method: "GET" }).handler(
   async (): Promise<PlatformFeatureFlagPayload | null> => {
     const token = readSessionToken();
-    if (!token) return null;
+    const environment = resolveFeatureFlagEnvironment();
+    const path = token ? "/api/v1/platform/feature-flags" : "/api/v1/platform/feature-flags/public";
 
     try {
-      const response = await apiFetch<FeatureFlagsApiResponse>("/api/v1/platform/feature-flags", {
+      const response = await apiFetch<FeatureFlagsApiResponse>(path, {
         method: "GET",
-        token,
+        query: { environment },
+        token: token ?? undefined,
       });
       return response.data ?? null;
-    } catch {
+    } catch (error) {
+      console.error("[feature-flags] Failed to load platform flags", error);
       return null;
     }
   },

@@ -10,6 +10,7 @@ export interface PlatformFeatureFlagPayload {
 
 export interface FeatureFlagsSnapshot {
   version: string;
+  storeVersion?: number;
   flags: Record<string, boolean>;
 }
 
