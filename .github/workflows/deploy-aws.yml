@@ -29,6 +29,8 @@ jobs:
       preinstall-script: scripts/sync-feature-flags-catalog.mjs
       github-environment: production
       generate-runtime-config: true
-      require-spa-index: false
+      prepare-static-shell: true
+      static-shell-title: NovaSafe — Sign in
+      require-spa-index: true
       s3-bucket: novasafe-prod-bucket-auth-793239449172
       cloudfront-distribution-id: EH77A1YGQ105X
