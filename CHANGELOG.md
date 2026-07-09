@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.3
+
+### Changed
+
+Enable static shell generation for AWS auth deploy
+
 ## v1.1.2
 
 ### Changed
