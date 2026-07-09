@@ -1,0 +1,34 @@
+# Deploy auth site to AWS (S3 + CloudFront)
+#
+# Parallel deployment path — does NOT replace Docker/Nginx production CI.
+# See docs/DEPLOY_AWS.md for configuration instructions.
+#
+# Prerequisites:
+#   1. AuthStack deployed via novasafe-deployment CDK
+#   2. Repository Variables: AWS_ROLE_ARN, AWS_REGION (ap-south-1)
+#   3. Environment "production" variables (VITE_* URLs — see docs/DEPLOY_AWS.md)
+#   4. ACM certificate validated; DNS pointed at CloudFront for start.novasafe.io
+
+name: Deploy AWS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to AWS (production)
+    permissions:
+      id-token: write
+      contents: read
+    uses: novasafe-org/novasafe-deployment/.github/workflows/deploy-frontend-aws.yml@master
+    with:
+      application-name: novasafe-auth-v2
+      build-directory: dist/client
+      node-version: '22'
+      package-manager: pnpm
+      preinstall-script: scripts/sync-feature-flags-catalog.mjs
+      github-environment: production
+      generate-runtime-config: true
+      require-spa-index: false
+      s3-bucket: novasafe-prod-bucket-auth-793239449172
+      cloudfront-distribution-id: REPLACE_AFTER_AUTH_CDK_DEPLOY
