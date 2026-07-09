@@ -31,4 +31,4 @@ jobs:
       generate-runtime-config: true
       require-spa-index: false
       s3-bucket: novasafe-prod-bucket-auth-793239449172
-      cloudfront-distribution-id: REPLACE_AFTER_AUTH_CDK_DEPLOY
+      cloudfront-distribution-id: EH77A1YGQ105X
