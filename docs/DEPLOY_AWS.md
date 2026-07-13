@@ -1,52 +1,55 @@
 # AWS Auth Deployment
 
-Deploy **start.novasafe.io** to **AWS S3 + CloudFront** in parallel with the existing Docker/Nginx production deployment.
+Deploy **start.novasafe.io** as **TanStack Start SSR on AWS Lambda** (container) behind CloudFront.
 
-## Workflow
+> **Important:** Auth is **not** a static SPA. Login/signup use TanStack **server functions** and require a Node SSR runtime. Uploading only `dist/client` to S3 causes a blank page (`Invariant failed` in the browser console).
 
-`.github/workflows/deploy-aws.yml` → `novasafe-deployment/deploy-frontend-aws.yml`
+## Architecture
 
-## Configuration
+```
+Browser → CloudFront → Lambda (Docker SSR, same as VPS) → mobile-api
+```
 
-### Repository Variables
+## Prerequisites
 
-| Variable | Example |
-|----------|---------|
-| `AWS_ROLE_ARN` | `arn:aws:iam::793239449172:role/NovaSafeGitHubDeployRole` |
-| `AWS_REGION` | `ap-south-1` |
+1. **Auth** CDK stack deployed (`novasafe-prod-auth`) with SSR Lambda + ECR + CloudFront
+2. Repository variables: `AWS_ROLE_ARN`, `AWS_REGION` (`ap-south-1`)
+3. ACM DNS validation + Cloudflare CNAME for `start.novasafe.io`
+4. IAM role: `ecr:*` push/pull, `lambda:UpdateFunctionCode`, `cloudfront:CreateInvalidation`
 
-### Environment Variables
+## Deploy
 
-Settings → Environments → **production** → **Environment variables**
+**Actions → Deploy AWS** (this repo, branch `main`)
 
-| Variable | Example |
-|----------|---------|
-| `VITE_AUTH_URL` | `https://start.novasafe.io` |
-| `VITE_LANDING_URL` | `https://novasafe.io` |
-| `VITE_APP_URL` | `https://app.novasafe.io` |
-| `VITE_API_URL` | `https://mobile-api.novasafe.io` |
-| `VITE_GOOGLE_WEB_CLIENT_ID` | *(optional — Google sign-in)* |
-| `VITE_REVENUECAT_PUBLIC_API_KEY_WEB` | *(optional — billing)* |
-| `VITE_REVENUECAT_ENTITLEMENT_PRO` | `pro` |
-| `VITE_REVENUECAT_PACKAGE_MONTHLY` | `$rc_monthly` |
-| `VITE_REVENUECAT_PACKAGE_YEARLY` | `$rc_annual` |
-| `VITE_APP_VERSION` | `1.1.0` |
+Builds `Dockerfile.lambda` (Lambda Web Adapter + `bin/server.mjs`), pushes to ECR, updates `novasafe-prod-fn-auth`, invalidates CloudFront.
 
-### Stack outputs (update `deploy-aws.yml` after CDK deploy)
+## Stack outputs (after CDK deploy)
 
-| Field | Source |
-|-------|--------|
-| `s3-bucket` | `AuthBucketName` from `novasafe-prod-auth` |
-| `cloudfront-distribution-id` | `AuthDistributionId` |
+| Output | Use |
+|--------|-----|
+| `AuthEcrRepositoryName` | ECR repo (`novasafe-prod-ecr-auth`) |
+| `AuthLambdaFunctionName` | Lambda name for CI |
+| `AuthDistributionId` | CloudFront invalidation |
+| `AuthDistributionDomainName` | Cloudflare CNAME target |
 
-## Deploy sequence
+## Environment variables (production)
 
-1. **novasafe-deployment** → Deploy Infrastructure → **Auth**
-2. Add ACM DNS validation CNAMEs in Cloudflare for `start.novasafe.io`
-3. Point `start.novasafe.io` CNAME → CloudFront domain (DNS only)
-4. Update `cloudfront-distribution-id` in `deploy-aws.yml`
-5. Run **Deploy AWS** in this repo
+Set under **Settings → Environments → production** for Docker build args / runtime (same as before):
 
-## Note
+- `VITE_AUTH_URL`, `VITE_LANDING_URL`, `VITE_APP_URL`, `VITE_API_URL`
+- Optional: Google, RevenueCat keys
 
-Auth uses TanStack Start (SSR in Docker). The AWS path uploads the **client bundle** and `runtime-config.js`. Full SSR parity with Docker may require future Lambda hosting.
+Runtime secrets (session signing, etc.) should be added to the Lambda function environment in CDK or via AWS console — mirror VPS `platform/auth/.env` as needed.
+
+## Migrating from static S3
+
+If you previously deployed static files to `novasafe-prod-bucket-auth-*`:
+
+1. Redeploy **Auth** CDK stack (switches CloudFront origin to Lambda)
+2. Run **Deploy AWS** here (push container image)
+3. Keep Cloudflare CNAME → CloudFront domain (unchanged)
+
+## Related
+
+- `Dockerfile` — VPS/Docker SSR (same app)
+- `Dockerfile.lambda` — AWS Lambda container variant
