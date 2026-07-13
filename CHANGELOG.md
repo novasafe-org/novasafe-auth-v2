@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.5
+
+### Changed
+
+Deploy auth via zip Lambda (no ECR)
+
 ## v1.1.4
 
 ### Changed
