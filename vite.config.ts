@@ -39,7 +39,8 @@ export default defineConfig({
       port: resolveDevPort(),
     },
     ssr: {
-      noExternal: ["@novasafe/feature-flags"],
+      // Bundle SSR deps into dist/server so Lambda zip needs no node_modules.
+      noExternal: true,
     },
   },
 });
