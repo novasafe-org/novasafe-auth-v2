@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.4
+
+### Changed
+
+Deploy auth as Lambda SSR (fix blank login page)
+
 ## v1.1.3
 
 ### Changed
