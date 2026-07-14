@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.8
+
+### Changed
+
+Fix extension pairing handoff after AWS auth migration
+
 ## v1.1.7
 
 ### Changed
