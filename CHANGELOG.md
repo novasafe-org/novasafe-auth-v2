@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.7
+
+### Changed
+
+Sync auth static assets to S3 on deploy
+
 ## v1.1.6
 
 ### Changed
