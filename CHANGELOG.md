@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.6
+
+### Changed
+
+Fix Deploy AWS: vendor feature flags before pnpm install
+
 ## v1.1.5
 
 ### Changed
