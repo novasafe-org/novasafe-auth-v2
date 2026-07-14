@@ -12,8 +12,10 @@ export function mergeFlagSnapshots(
 }
 
 export function snapshotFromApiPayload(payload: PlatformFeatureFlagPayload): FeatureFlagsSnapshot {
+  const storeVersion = payload.storeVersion ?? 0;
   return {
-    version: payload.version,
+    version: `${payload.version}:${storeVersion}`,
+    storeVersion,
     flags: { ...buildProductionSafeDefaults(), ...payload.flags },
   };
 }
