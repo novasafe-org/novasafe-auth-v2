@@ -131,7 +131,7 @@ function ConnectExtensionPanel({ search }: { search: ExtensionPairingSearch }) {
         extensionPairingLog("Token Received", {
           callbackHost: new URL(result.extensionRedirectTo).hostname,
         });
-        window.location.replace("/connect/extension/success");
+        window.location.replace(result.extensionRedirectTo);
         return;
       }
 

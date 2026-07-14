@@ -84,11 +84,14 @@ export const completeExtensionPairingAction = createServerFn({ method: "POST" })
       }
 
       const redirectUrl = new URL(data.redirectUri);
-      const hash = new URLSearchParams({
+      // Query params survive chrome.identity.launchWebAuthFlow; URL hashes are often stripped.
+      redirectUrl.searchParams.set("pairing_code", response.pairingCode);
+      redirectUrl.searchParams.set("state", data.state);
+      // Legacy store builds (≤1.0.1) read the fragment only — keep both during transition.
+      redirectUrl.hash = new URLSearchParams({
         pairing_code: response.pairingCode,
         state: data.state,
-      });
-      redirectUrl.hash = hash.toString();
+      }).toString();
 
       extensionPairingLog("Pairing code issued", { redirectHost: redirectUrl.hostname });
       extensionPairingLog("Pairing Completed");
