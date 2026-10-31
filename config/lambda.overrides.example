@@ -1,0 +1,2 @@
+# Merged on top of s3://$BACKEND_CONFIG_BUCKET/auth/.env at Lambda package time.
+NODE_ENV=production

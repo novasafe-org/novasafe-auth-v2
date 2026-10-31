@@ -8,6 +8,10 @@ import { readFile } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { loadBundledEnv } from "./load-bundled-env.mjs";
+
+loadBundledEnv();
+
 const runtimeDir = fileURLToPath(new URL(".", import.meta.url));
 const clientDistDir = resolve(runtimeDir, "../client");
 
