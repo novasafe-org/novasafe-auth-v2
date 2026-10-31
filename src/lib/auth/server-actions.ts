@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ApiError, authApi, subscriptionsApi, type AuthUser } from "@/lib/api";
 import { buildAppUrl, resolvePostAuthRedirect } from "@/config";
 import { parseActionInput } from "./action-errors";
+import { messageForGoogleOtpRequired } from "./google-login-messages";
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from "./session.server";
 
 /**
@@ -216,9 +217,7 @@ export const googleLoginAction = createServerFn({ method: "POST" })
       if (response.requiresOtpVerification || response.pendingOtpProvider) {
         return {
           status: "otp-required",
-          message:
-            response.message ??
-            "This Google account still needs email verification before you can continue.",
+          message: messageForGoogleOtpRequired(response.oauthIntent, response.message),
           provider: response.authProvider,
           intent: response.oauthIntent,
         };
