@@ -1,7 +1,7 @@
 # Deploy auth SSR to AWS (zip Lambda + CloudFront, no ECR)
 #
 # Auth is TanStack Start with server functions — static S3 upload cannot run login.
-# See docs/DEPLOY_AWS.md
+# Production .env: s3://$BACKEND_CONFIG_BUCKET/auth/.env (see docs/DEPLOY_AWS.md)
 
 name: Deploy AWS
 
@@ -19,6 +19,7 @@ jobs:
     env:
       AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
       AWS_REGION: ${{ vars.AWS_REGION }}
+      BACKEND_CONFIG_BUCKET: ${{ vars.BACKEND_CONFIG_BUCKET }}
       LAMBDA_FUNCTION: novasafe-prod-fn-auth
       S3_BUCKET: novasafe-prod-bucket-auth-793239449172
       CLOUDFRONT_DISTRIBUTION_ID: EH77A1YGQ105X
@@ -26,7 +27,7 @@ jobs:
       - name: Validate variables
         run: |
           set -euo pipefail
-          for name in AWS_ROLE_ARN AWS_REGION; do
+          for name in AWS_ROLE_ARN AWS_REGION BACKEND_CONFIG_BUCKET; do
             if [ -z "${!name:-}" ]; then
               echo "::error::Missing repository variable: $name"
               exit 1
@@ -51,13 +52,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Checkout deployment actions
+      - name: Checkout deployment scripts
         uses: actions/checkout@v4
         with:
           repository: novasafe-org/novasafe-deployment
           ref: master
           path: _novasafe-deployment
           sparse-checkout: |
+            .github/scripts/fetch-s3-env.sh
             .github/actions/configure-aws
             .github/actions/deploy-lambda
             .github/actions/deploy-s3
@@ -70,8 +72,20 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-session-name: novasafe-auth-v2-deploy
 
+      - name: Fetch .env from S3 and merge Lambda overrides
+        run: |
+          set -euo pipefail
+          bash _novasafe-deployment/.github/scripts/fetch-s3-env.sh \
+            "${BACKEND_CONFIG_BUCKET}" \
+            "auth/.env" \
+            /tmp/service.env
+          node .github/scripts/merge-env-files.mjs \
+            /tmp/lambda.env \
+            /tmp/service.env \
+            config/lambda.overrides.example
+
       - name: Package Lambda zip
-        run: node scripts/package-lambda.mjs --output dist/lambda.zip
+        run: node scripts/package-lambda.mjs --env-file /tmp/lambda.env --output dist/lambda.zip
 
       - name: Deploy Lambda zip
         uses: ./_novasafe-deployment/.github/actions/deploy-lambda
@@ -99,7 +113,6 @@ jobs:
           sleep 5
           STATUS="$(curl -sS -o /tmp/login.html -w '%{http_code}' https://start.novasafe.io/login)"
           echo "HTTP $STATUS"
-          head -20 /tmp/login.html
           if [ "$STATUS" != "200" ]; then
             echo "::error::/login returned HTTP $STATUS"
             exit 1
@@ -107,4 +120,7 @@ jobs:
           if ! grep -qi '<html' /tmp/login.html; then
             echo "::error::/login did not return HTML"
             exit 1
+          fi
+          if grep -q '"VITE_GOOGLE_WEB_CLIENT_ID":""' /tmp/login.html; then
+            echo "::warning::VITE_GOOGLE_WEB_CLIENT_ID is still empty — check s3://${BACKEND_CONFIG_BUCKET}/auth/.env"
           fi

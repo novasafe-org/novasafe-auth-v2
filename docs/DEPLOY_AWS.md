@@ -35,12 +35,31 @@ Builds Vite SSR output, packages `dist/lambda.zip` (`scripts/package-lambda.mjs`
 
 ## Environment variables (production)
 
-Set under **Settings → Environments → production** (same as VPS build):
+Same model as **mobile-api / admin-api**: upload a `.env` to the private config bucket; CI downloads it, merges Lambda overrides, and bundles it inside `lambda.zip`.
 
-- `VITE_AUTH_URL`, `VITE_LANDING_URL`, `VITE_APP_URL`, `VITE_API_URL`
-- Optional: Google, RevenueCat keys
+| S3 key | Lambda |
+|--------|--------|
+| `auth/.env` | `novasafe-prod-fn-auth` |
 
-Runtime secrets (session signing, etc.) should be added to the Lambda function environment in CDK or via AWS console — mirror VPS `platform/auth/.env` as needed.
+**GitHub repository variables** (not in S3):
+
+| Variable | Purpose |
+|----------|---------|
+| `AWS_ROLE_ARN` | OIDC deploy role |
+| `AWS_REGION` | e.g. `ap-south-1` |
+| `BACKEND_CONFIG_BUCKET` | e.g. `novasafe-api-prod-backend-config` or `…-793239449172` |
+
+Upload:
+
+```bash
+aws s3 cp auth.env s3://$BACKEND_CONFIG_BUCKET/auth/.env --sse AES256
+```
+
+Template keys: see `.env.example` in this repo (including `VITE_GOOGLE_WEB_CLIENT_ID`, RevenueCat, cookie settings).
+
+Runtime: `bin/load-bundled-env.mjs` loads the bundled `.env` on each Lambda cold start; SSR injects `window.__NS_PUBLIC_ENV__` for the browser.
+
+Legacy VPS: `platform/auth/.env` on the deployment host still works for Docker SSR.
 
 ## Migrating from static S3 or ECR container
 
