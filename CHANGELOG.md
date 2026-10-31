@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.9
+
+### Changed
+
+Deploy AWS: load auth env from S3 config bucket
+
 ## v1.1.8
 
 ### Changed
