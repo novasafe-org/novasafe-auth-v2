@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.10
+
+### Changed
+
+fix(auth): Google on login — signup required for new users
+
 ## v1.1.9
 
 ### Changed
