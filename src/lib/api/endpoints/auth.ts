@@ -84,6 +84,8 @@ export interface LoginResponse {
 
 export interface GoogleSignInPayload extends DeviceContext {
   idToken: string;
+  /** `login` = existing accounts only (web sign-in). Default on API = `register` (mobile signup). */
+  flow?: "login" | "register";
 }
 
 export interface VerifyOtpPayload {

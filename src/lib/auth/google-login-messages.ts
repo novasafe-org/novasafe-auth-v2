@@ -1,15 +1,11 @@
 import type { GoogleOauthIntent } from "@/lib/api";
 
-/**
- * User-facing copy when Google sign-in stops at NovaSafe email OTP (login screen).
- */
+/** Shown when login-time Google OAuth requires NovaSafe email OTP (register flow only). */
 export function messageForGoogleOtpRequired(
   intent: GoogleOauthIntent | string | undefined,
   backendMessage?: string,
 ): string {
   switch (intent) {
-    case "google_register_pending_email":
-      return "No NovaSafe account exists for this Google email yet. Please create an account first using Sign up.";
     case "google_returning_pending_email":
       return "Your email still needs to be verified before you can sign in. Check your inbox for the 6-digit code from NovaSafe.";
     default:
@@ -19,3 +15,11 @@ export function messageForGoogleOtpRequired(
       );
   }
 }
+
+/** Login page: Google sign-in rejected because no NovaSafe user exists. */
+export const GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE =
+  "No NovaSafe account for this Google email. Please sign up first.";
+
+/** Login page: user exists but never finished NovaSafe signup verification. */
+export const GOOGLE_LOGIN_ACCOUNT_NOT_READY_MESSAGE =
+  "This account is not ready to sign in yet. Please finish creating your account on the sign up page.";
