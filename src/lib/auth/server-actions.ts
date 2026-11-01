@@ -4,6 +4,11 @@ import { z } from "zod";
 import { ApiError, authApi, subscriptionsApi, type AuthUser } from "@/lib/api";
 import { buildAppUrl, resolvePostAuthRedirect } from "@/config";
 import { parseActionInput } from "./action-errors";
+import {
+  GOOGLE_LOGIN_ACCOUNT_NOT_READY_MESSAGE,
+  GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+  messageForGoogleOtpRequired,
+} from "./google-login-messages";
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from "./session.server";
 
 /**
@@ -211,14 +216,13 @@ export const googleLoginAction = createServerFn({ method: "POST" })
     try {
       const response = await authApi.loginWithGoogle({
         idToken: data.idToken,
+        flow: "login",
       });
 
       if (response.requiresOtpVerification || response.pendingOtpProvider) {
         return {
           status: "otp-required",
-          message:
-            response.message ??
-            "This Google account still needs email verification before you can continue.",
+          message: messageForGoogleOtpRequired(response.oauthIntent, response.message),
           provider: response.authProvider,
           intent: response.oauthIntent,
         };
@@ -241,6 +245,22 @@ export const googleLoginAction = createServerFn({ method: "POST" })
       };
     } catch (err) {
       if (err instanceof ApiError) {
+        if (err.code === "NO_ACCOUNT") {
+          return {
+            status: "error",
+            message: err.message || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+            code: err.code,
+            httpStatus: err.status,
+          };
+        }
+        if (err.code === "ACCOUNT_NOT_VERIFIED") {
+          return {
+            status: "error",
+            message: err.message || GOOGLE_LOGIN_ACCOUNT_NOT_READY_MESSAGE,
+            code: err.code,
+            httpStatus: err.status,
+          };
+        }
         return {
           status: "error",
           message: err.message,

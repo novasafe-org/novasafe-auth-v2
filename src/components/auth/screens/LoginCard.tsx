@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Building2, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
 
+import { messageForGoogleOtpRequired } from "@/lib/auth/google-login-messages";
 import { loginAction, googleLoginAction, type LoginResult } from "@/lib/auth";
 import { toAuthActionMessage, isExpectedAuthClientError } from "@/lib/auth/action-errors";
 import { useFeatureFlag } from "@/lib/feature-flags";
@@ -107,7 +108,7 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
       if (result.status === "otp-required") {
         setError(
           result.message ||
-            "This Google account still needs email verification. Please finish signup first.",
+            messageForGoogleOtpRequired(result.intent),
         );
         return;
       }
