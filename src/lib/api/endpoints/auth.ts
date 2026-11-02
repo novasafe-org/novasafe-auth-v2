@@ -74,6 +74,11 @@ export interface LoginResponse {
   tempSessionToken?: string;
   authProvider?: "google" | "apple" | string;
   oauthIntent?: GoogleOauthIntent | string;
+  /** Present when `flow=register` validates Google sign-up (no user created yet). */
+  signupIntent?: boolean;
+  fullName?: string;
+  googleSignupIntentToken?: string;
+  picture?: string | null;
   entitlement?: string;
   subscription?: unknown;
 }

@@ -29,6 +29,13 @@ export {
   type CompleteSignupResult,
 } from "./signup-actions";
 
+export {
+  googleSignupValidateAction,
+  completeGoogleSignupAction,
+  type GoogleSignupValidateResult,
+  type CompleteGoogleSignupResult,
+} from "./google-signup-actions";
+
 /**
  * Server-only helpers (cookie read/write/clear) live in
  * `./session.server`. They are intentionally NOT re-exported from this

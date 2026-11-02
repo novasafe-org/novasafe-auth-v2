@@ -3,6 +3,7 @@ import { ArrowRight, KeyRound, Loader2 } from "lucide-react";
 
 import { checkSignupEmailAction, type CheckEmailResult } from "@/lib/auth";
 import { buildLoginUrl } from "@/config";
+import { getGoogleWebClientId, isGoogleSignInEnabled } from "@/lib/auth/google-config";
 import { Divider, ErrorBanner, Field, Input, PrimaryButton } from "@/components/auth/primitives";
 
 interface IdentityStepProps {
@@ -10,6 +11,9 @@ interface IdentityStepProps {
   /** Optional `next` URL — forwarded to the "sign in instead" link. */
   next?: string;
   onContinue: (values: { fullName: string; email: string }) => void;
+  onGoogleSignup?: () => void;
+  googleLoading?: boolean;
+  googleError?: string | null;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,7 +25,14 @@ const DEBOUNCE_MS = 500;
  * Performs a debounced server-side `check-email` lookup so we can warn
  * about duplicate accounts before the user invests time picking a password.
  */
-export function IdentityStep({ defaults, next, onContinue }: IdentityStepProps) {
+export function IdentityStep({
+  defaults,
+  next,
+  onContinue,
+  onGoogleSignup,
+  googleLoading = false,
+  googleError = null,
+}: IdentityStepProps) {
   const [fullName, setFullName] = useState(defaults.fullName);
   const [email, setEmail] = useState(defaults.email);
   const [emailLookup, setEmailLookup] = useState<{
@@ -122,11 +133,28 @@ export function IdentityStep({ defaults, next, onContinue }: IdentityStepProps) 
         <ErrorBanner message={emailLookup.message} />
       )}
 
+      {googleError && <ErrorBanner message={googleError} />}
+
       <PrimaryButton type="submit" loading={submitting} disabled={emailLookup.state === "taken"}>
         Continue <ArrowRight className="h-4 w-4" />
       </PrimaryButton>
 
       <Divider label="or" />
+
+      <button
+        type="button"
+        onClick={onGoogleSignup}
+        disabled={!isGoogleSignInEnabled() || googleLoading || submitting || !onGoogleSignup}
+        title={
+          isGoogleSignInEnabled()
+            ? undefined
+            : "Google Sign-In requires VITE_GOOGLE_WEB_CLIENT_ID"
+        }
+        className="group w-full h-11 rounded-[10px] bg-card border border-border text-[13px] font-medium inline-flex items-center justify-center gap-2.5 shadow-xs disabled:opacity-60 disabled:cursor-not-allowed hover:bg-secondary transition-colors"
+      >
+        <KeyRound className="h-4 w-4" />
+        {googleLoading ? "Connecting to Google…" : "Sign up with Google"}
+      </button>
 
       <a
         href={buildLoginUrl(next ? { next } : undefined)}

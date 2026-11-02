@@ -7,6 +7,7 @@ import { parseActionInput } from "./action-errors";
 import {
   GOOGLE_LOGIN_ACCOUNT_NOT_READY_MESSAGE,
   GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+  mapGoogleApiError,
   messageForGoogleOtpRequired,
 } from "./google-login-messages";
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from "./session.server";
@@ -261,9 +262,10 @@ export const googleLoginAction = createServerFn({ method: "POST" })
             httpStatus: err.status,
           };
         }
+        const mapped = mapGoogleApiError(err);
         return {
           status: "error",
-          message: err.message,
+          message: mapped ?? err.message,
           code: err.code,
           httpStatus: err.status,
         };

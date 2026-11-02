@@ -1,21 +1,21 @@
 import { useCallback, useState, type ReactNode } from "react";
 
 import {
+  completeGoogleSignupAction,
   completeSignupAction,
+  googleSignupValidateAction,
   requestSignupOtpAction,
   type CompleteSignupResult,
   type RequestOtpResult,
 } from "@/lib/auth";
 import { toAuthActionMessage, isExpectedAuthClientError } from "@/lib/auth/action-errors";
+import { getGoogleWebClientId } from "@/lib/auth/google-config";
+import { requestGoogleIdToken } from "@/lib/auth/google";
 import { Section, Title } from "@/components/auth/primitives";
 import { IdentityStep } from "@/components/auth/signup/IdentityStep";
 import { PasswordStep } from "@/components/auth/signup/PasswordStep";
 import { OtpStep } from "@/components/auth/signup/OtpStep";
 import { SignupStepper } from "@/components/auth/signup/SignupStepper";
-
-/* ------------------------------------------------------------------------- */
-/* Public types                                                              */
-/* ------------------------------------------------------------------------- */
 
 export interface SignupSuccess {
   user: { id: string; email: string; name?: string; picture?: string };
@@ -24,23 +24,25 @@ export interface SignupSuccess {
 }
 
 interface SignupCardProps {
-  /** Optional `next` URL to forward to the app after signup completes. */
   next?: string;
-  /**
-   * Called when the OTP-verify-create-login pipeline succeeds AND a session
-   * cookie has been written. Free signup goes straight to `WelcomeCard`;
-   * Pro signup will intercept this in Phase 5 to show a paywall first.
-   */
   onComplete: (result: SignupSuccess) => void;
 }
 
-/* ------------------------------------------------------------------------- */
-/* State machine                                                             */
-/* ------------------------------------------------------------------------- */
+type GoogleSignupBundle = {
+  viaGoogle: true;
+  idToken: string;
+  googleSignupIntentToken: string;
+};
 
 type Stage =
-  | { step: "identity"; fullName: string; email: string }
-  | { step: "password"; fullName: string; email: string; passwordError: string | null }
+  | { step: "identity"; fullName: string; email: string; googleError: string | null }
+  | {
+      step: "password";
+      fullName: string;
+      email: string;
+      passwordError: string | null;
+      google?: GoogleSignupBundle;
+    }
   | {
       step: "otp";
       fullName: string;
@@ -49,12 +51,19 @@ type Stage =
       otpError: string | null;
       otpNotice: string | null;
       cooldownSeconds: number;
+      google?: GoogleSignupBundle;
     };
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
 export function SignupCard({ next, onComplete }: SignupCardProps) {
-  const [stage, setStage] = useState<Stage>({ step: "identity", fullName: "", email: "" });
+  const [stage, setStage] = useState<Stage>({
+    step: "identity",
+    fullName: "",
+    email: "",
+    googleError: null,
+  });
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleIdentityContinue = useCallback(
     ({ fullName, email }: { fullName: string; email: string }) => {
@@ -62,6 +71,39 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
     },
     [],
   );
+
+  const handleGoogleSignup = useCallback(async () => {
+    const clientId = getGoogleWebClientId();
+    if (!clientId || googleLoading || stage.step !== "identity") return;
+    setGoogleLoading(true);
+    setStage({ ...stage, googleError: null });
+    try {
+      const idToken = await requestGoogleIdToken(clientId);
+      const result = await googleSignupValidateAction({ data: { idToken } });
+      if (result.status === "ok") {
+        setStage({
+          step: "password",
+          fullName: result.fullName,
+          email: result.email,
+          passwordError: null,
+          google: {
+            viaGoogle: true,
+            idToken: result.idToken,
+            googleSignupIntentToken: result.googleSignupIntentToken,
+          },
+        });
+        return;
+      }
+      setStage({ ...stage, googleError: result.message });
+    } catch (err) {
+      setStage({
+        ...stage,
+        googleError: toAuthActionMessage(err, "Google sign-up was cancelled or unavailable."),
+      });
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [googleLoading, stage]);
 
   const handlePasswordSubmit = useCallback(
     async (password: string): Promise<boolean> => {
@@ -88,6 +130,7 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
           otpError: null,
           otpNotice: result.message ?? "Code sent. Check your inbox.",
           cooldownSeconds: RESEND_COOLDOWN_SECONDS,
+          google: stage.google,
         });
         return true;
       }
@@ -107,6 +150,54 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
   const handleOtpSubmit = useCallback(
     async (otp: string): Promise<boolean> => {
       if (stage.step !== "otp") return false;
+
+      if (stage.google?.viaGoogle) {
+        let result;
+        try {
+          result = await completeGoogleSignupAction({
+            data: {
+              email: stage.email,
+              fullName: stage.fullName,
+              password: stage.password,
+              otp,
+              idToken: stage.google.idToken,
+              googleSignupIntentToken: stage.google.googleSignupIntentToken,
+              next: next ?? null,
+            },
+          });
+        } catch (err) {
+          setStage({
+            ...stage,
+            otpError: toAuthActionMessage(err, "Something went wrong. Try again in a moment."),
+            otpNotice: null,
+          });
+          return false;
+        }
+        if (result.status === "ok") {
+          onComplete({
+            user: result.user,
+            fullName: stage.fullName,
+            redirectTo: result.redirectTo,
+          });
+          return true;
+        }
+        if (result.status === "invalid-otp") {
+          setStage({ ...stage, otpError: result.message, otpNotice: null });
+          return false;
+        }
+        if (result.status === "email-taken") {
+          setStage({
+            step: "identity",
+            fullName: stage.fullName,
+            email: stage.email,
+            googleError: result.message,
+          });
+          return false;
+        }
+        setStage({ ...stage, otpError: result.message, otpNotice: null });
+        return false;
+      }
+
       let result: CompleteSignupResult;
       try {
         result = await completeSignupAction({
@@ -140,11 +231,7 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
       }
 
       if (result.status === "invalid-otp") {
-        setStage({
-          ...stage,
-          otpError: result.message,
-          otpNotice: null,
-        });
+        setStage({ ...stage, otpError: result.message, otpNotice: null });
         return false;
       }
 
@@ -153,15 +240,12 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
           step: "identity",
           fullName: stage.fullName,
           email: stage.email,
+          googleError: null,
         });
         return false;
       }
 
-      setStage({
-        ...stage,
-        otpError: result.message,
-        otpNotice: null,
-      });
+      setStage({ ...stage, otpError: result.message, otpNotice: null });
       return false;
     },
     [stage, next, onComplete],
@@ -177,9 +261,6 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
     try {
       result = await requestSignupOtpAction({ data: { email: stage.email } });
     } catch (err) {
-      if (import.meta.env.DEV && !isExpectedAuthClientError(err)) {
-        console.error("[SignupCard] resend OTP failed", err);
-      }
       setStage({
         ...stage,
         otpError: toAuthActionMessage(err, "We couldn't resend the code. Try again."),
@@ -207,17 +288,12 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
       });
       return { ok: false, cooldownSeconds: wait };
     }
-    setStage({
-      ...stage,
-      otpError: result.message,
-      otpNotice: null,
-    });
+    setStage({ ...stage, otpError: result.message, otpNotice: null });
     return { ok: false };
   }, [stage]);
 
-  /* --------------------------- Render -------------------------------- */
-
-  const stepIndex: 0 | 1 | 2 = stage.step === "identity" ? 0 : stage.step === "password" ? 1 : 2;
+  const stepIndex: 0 | 1 | 2 =
+    stage.step === "identity" ? 0 : stage.step === "password" ? 1 : 2;
 
   return (
     <Section>
@@ -234,6 +310,9 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
               defaults={{ fullName: stage.fullName, email: stage.email }}
               next={next}
               onContinue={handleIdentityContinue}
+              onGoogleSignup={handleGoogleSignup}
+              googleLoading={googleLoading}
+              googleError={stage.googleError}
             />
           </>
         )}
@@ -242,13 +321,22 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
           <>
             <Title
               title="Pick a master password"
-              sub="This unlocks every secret in your vault. Make it strong — you only have to remember this one."
+              sub={
+                stage.google?.viaGoogle
+                  ? "Google verified your email. Choose a master password — we still email you a 6-digit code to confirm before your account is created."
+                  : "This unlocks every secret in your vault. Make it strong — you only have to remember this one."
+              }
             />
             <PasswordStep
               email={stage.email}
               error={stage.passwordError}
               onBack={() =>
-                setStage({ step: "identity", fullName: stage.fullName, email: stage.email })
+                setStage({
+                  step: "identity",
+                  fullName: stage.fullName,
+                  email: stage.email,
+                  googleError: null,
+                })
               }
               onSubmit={handlePasswordSubmit}
             />
@@ -267,6 +355,7 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
                 fullName: stage.fullName,
                 email: stage.email,
                 passwordError: null,
+                google: stage.google,
               })
             }
             onSubmit={handleOtpSubmit}
@@ -279,8 +368,6 @@ export function SignupCard({ next, onComplete }: SignupCardProps) {
 }
 
 function StepBody({ stage, children }: { stage: Stage; children: ReactNode }) {
-  // Wraps the active step in a single keyed div so React fully resets DOM
-  // state (and any focus traps) when the user navigates between steps.
   return (
     <div key={stage.step} className="space-y-7">
       {children}

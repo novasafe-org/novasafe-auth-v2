@@ -26,6 +26,7 @@ export type {
 } from "./endpoints/onboarding";
 
 export { subscriptionsApi } from "./endpoints/subscriptions";
+export { settingsApi } from "./endpoints/settings";
 export type {
   SubscriptionsApi,
   SubscriptionState,

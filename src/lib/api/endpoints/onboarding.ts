@@ -42,6 +42,11 @@ export interface CreateAccountPayload {
   signupProofToken: string;
 }
 
+export interface CreateGoogleAccountPayload extends CreateAccountPayload {
+  googleSignupIntentToken: string;
+  idToken: string;
+}
+
 export interface CreateAccountResponse {
   success: boolean;
   source?: string;
@@ -72,6 +77,13 @@ export const onboardingApi = {
 
   createAccount(payload: CreateAccountPayload) {
     return apiFetch<CreateAccountResponse>(`${PREFIX}/create-account`, {
+      method: "POST",
+      body: payload,
+    });
+  },
+
+  createGoogleAccount(payload: CreateGoogleAccountPayload) {
+    return apiFetch<CreateAccountResponse>(`${PREFIX}/create-google-account`, {
       method: "POST",
       body: payload,
     });
