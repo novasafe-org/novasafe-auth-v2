@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.11
+
+### Changed
+
+feat(auth): Google sign-up on web + master password enrollment
+
 ## v1.1.10
 
 ### Changed
