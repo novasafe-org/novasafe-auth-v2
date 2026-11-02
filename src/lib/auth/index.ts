@@ -30,10 +30,10 @@ export {
 } from "./signup-actions";
 
 export {
-  googleSignupStartAction,
-  googleSignupSetPasswordAction,
-  type GoogleSignupStartResult,
-  type GoogleSignupPasswordResult,
+  googleSignupValidateAction,
+  completeGoogleSignupAction,
+  type GoogleSignupValidateResult,
+  type CompleteGoogleSignupResult,
 } from "./google-signup-actions";
 
 /**

@@ -1,74 +1,70 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { ApiError, authApi, settingsApi, type AuthUser } from "@/lib/api";
+import { ApiError, authApi, onboardingApi, type AuthUser } from "@/lib/api";
 import { resolvePostAuthRedirect } from "@/config";
 import { parseActionInput } from "./action-errors";
-import {
-  GOOGLE_SIGNUP_ACCOUNT_EXISTS_MESSAGE,
-  GOOGLE_SIGNUP_PROVIDER_NOT_LINKED_MESSAGE,
-  mapGoogleApiError,
-} from "./google-login-messages";
-import { readSessionToken, writeSessionCookie } from "./session.server";
+import { mapGoogleApiError } from "./google-login-messages";
+import { writeSessionCookie } from "./session.server";
 
 const googleTokenSchema = z.object({
   idToken: z.string().min(1),
+});
+
+const completeGoogleSignupSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  fullName: z.string().trim().min(1).max(120),
+  password: z.string().min(8),
+  otp: z.string().trim().regex(/^\d{4,8}$/),
+  idToken: z.string().min(1),
+  googleSignupIntentToken: z.string().min(1),
   next: z.string().url().optional().nullable(),
 });
 
-const googlePasswordSchema = z.object({
-  password: z.string().min(8, "Master password must be at least 8 characters"),
-  next: z.string().url().optional().nullable(),
-});
-
-export type GoogleSignupStartResult =
+export type GoogleSignupValidateResult =
   | {
-      status: "master-password-required";
-      user: AuthUser;
-      fullName: string;
+      status: "ok";
       email: string;
+      fullName: string;
+      googleSignupIntentToken: string;
+      idToken: string;
     }
-  | { status: "ok"; user: AuthUser; redirectTo: string }
   | { status: "error"; message: string; code?: string; httpStatus?: number };
 
-export type GoogleSignupPasswordResult =
+export type CompleteGoogleSignupResult =
   | { status: "ok"; user: AuthUser; redirectTo: string }
-  | { status: "error"; message: string; code?: string };
+  | { status: "invalid-otp"; message: string }
+  | { status: "email-taken"; message: string }
+  | { status: "error"; message: string; code?: string; httpStatus?: number };
 
-/** Sign up with Google (register intent). Session cookie written before master password step. */
-export const googleSignupStartAction = createServerFn({ method: "POST" })
+/** Step 1: validate Google token; pre-fill identity (no NovaSafe account yet). */
+export const googleSignupValidateAction = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => parseActionInput(googleTokenSchema, input))
-  .handler(async ({ data }): Promise<GoogleSignupStartResult> => {
+  .handler(async ({ data }): Promise<GoogleSignupValidateResult> => {
     try {
       const response = await authApi.loginWithGoogle({
         idToken: data.idToken,
         flow: "register",
       });
 
-      const token = response.accessToken ?? response.token;
-      if (!token || !response.user) {
+      if (
+        response.signupIntent &&
+        response.googleSignupIntentToken &&
+        response.email
+      ) {
         return {
-          status: "error",
-          message: response.message ?? "Google sign-up failed. Please try again.",
-          code: response.code,
-        };
-      }
-
-      writeSessionCookie(token);
-
-      if (response.requiresMasterPasswordSetup !== false) {
-        return {
-          status: "master-password-required",
-          user: response.user,
-          fullName: response.user.name ?? response.user.email.split("@")[0] ?? "",
-          email: response.user.email,
+          status: "ok",
+          email: response.email,
+          fullName: response.fullName ?? response.email.split("@")[0] ?? "",
+          googleSignupIntentToken: response.googleSignupIntentToken,
+          idToken: data.idToken,
         };
       }
 
       return {
-        status: "ok",
-        user: response.user,
-        redirectTo: resolvePostAuthRedirect(data.next ?? null),
+        status: "error",
+        message: response.message ?? "Google sign-up could not start. Try again.",
+        code: response.code,
       };
     } catch (err) {
       if (err instanceof ApiError) {
@@ -83,35 +79,76 @@ export const googleSignupStartAction = createServerFn({ method: "POST" })
     }
   });
 
-/** Set master password after Google signup (authenticated session required). */
-export const googleSignupSetPasswordAction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => parseActionInput(googlePasswordSchema, input))
-  .handler(async ({ data }): Promise<GoogleSignupPasswordResult> => {
-    const token = readSessionToken();
-    if (!token) {
-      return { status: "error", message: "Your session expired. Please start sign-up again." };
-    }
-
+/** Steps 2–3: NovaSafe OTP verified, then create Google-linked account + session. */
+export const completeGoogleSignupAction = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => parseActionInput(completeGoogleSignupSchema, input))
+  .handler(async ({ data }): Promise<CompleteGoogleSignupResult> => {
     try {
-      await settingsApi.setLoginPassword(data.password, token);
-      const session = await authApi.validateSession(token);
-      if (!session.success || !session.user) {
-        return { status: "error", message: "Unable to confirm your account. Please sign in." };
-      }
+      let signupProofToken: string | undefined;
       try {
-        await authApi.completeOAuthWelcome(token);
-      } catch {
-        // Non-fatal if welcome already completed.
+        const verified = await onboardingApi.verifyOtp(data.email, data.otp);
+        signupProofToken = verified.signupProofToken;
+        if (!signupProofToken) {
+          return {
+            status: "error",
+            message: "Email verification did not complete. Request a new code and try again.",
+          };
+        }
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 400) {
+          return { status: "invalid-otp", message: err.message || "That code didn't match." };
+        }
+        throw err;
       }
+
+      try {
+        await onboardingApi.createGoogleAccount({
+          email: data.email,
+          fullName: data.fullName,
+          password: data.password,
+          signupProofToken,
+          googleSignupIntentToken: data.googleSignupIntentToken,
+          idToken: data.idToken,
+        });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 409) {
+          return {
+            status: "email-taken",
+            message: err.message || "This email already has an account. Try signing in instead.",
+          };
+        }
+        throw err;
+      }
+
+      const login = await authApi.login({
+        email: data.email,
+        password: data.password,
+      });
+      const token = login.accessToken ?? login.token;
+      if (!token || !login.user) {
+        return {
+          status: "error",
+          message:
+            login.message ??
+            "Account created, but sign-in didn't complete. Please try signing in manually.",
+        };
+      }
+
+      writeSessionCookie(token);
       return {
         status: "ok",
-        user: session.user,
+        user: login.user,
         redirectTo: resolvePostAuthRedirect(data.next ?? null),
       };
     } catch (err) {
       if (err instanceof ApiError) {
-        return { status: "error", message: err.message, code: err.code };
+        return {
+          status: "error",
+          message: err.message,
+          code: err.code,
+          httpStatus: err.status,
+        };
       }
-      return { status: "error", message: "Could not save your master password. Try again." };
+      return { status: "error", message: "Something went wrong. Try again in a moment." };
     }
   });
