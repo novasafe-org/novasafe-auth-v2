@@ -207,7 +207,22 @@ export const authApi = {
     });
   },
 
-  confirmPasswordReset(payload: { email: string; otp: string; newPassword: string }) {
+  verifyPasswordResetOtp(payload: { email: string; otp: string }) {
+    return apiFetch<{ success: boolean; message?: string; resetProofToken?: string }>(
+      `${PREFIX}/password-reset/verify-otp`,
+      {
+        method: "POST",
+        body: payload,
+      },
+    );
+  },
+
+  confirmPasswordReset(payload: {
+    email: string;
+    newPassword: string;
+    otp?: string;
+    resetProofToken?: string;
+  }) {
     return apiFetch<{ success: boolean; message?: string }>(`${PREFIX}/password-reset/confirm`, {
       method: "POST",
       body: payload,

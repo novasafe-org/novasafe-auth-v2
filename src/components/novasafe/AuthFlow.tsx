@@ -29,6 +29,7 @@ import { EditorialPanel, NovaLogo, ThemeToggle } from "./visuals";
 import {
   confirmPasswordResetAction,
   requestPasswordResetAction,
+  verifyPasswordResetOtpAction,
 } from "@/lib/auth/password-reset-actions";
 
 type Step =
@@ -641,7 +642,7 @@ function ForgotScreen({
           setError(null);
           void requestPasswordResetAction({ data: { email } })
             .then((result) => {
-              if (!result.success) {
+              if (result.status !== "ok") {
                 setError(result.message ?? "Could not send reset code.");
                 setSent(false);
                 return;
@@ -704,11 +705,24 @@ function ResetPasswordScreen({
           }
           setLoading(true);
           setError(null);
-          void confirmPasswordResetAction({
-            data: { email, otp, newPassword: password },
-          })
+          void verifyPasswordResetOtpAction({ data: { email, otp } })
+            .then((verify) => {
+              if (verify.status !== "ok") {
+                setError(verify.message ?? "Could not verify code.");
+                setLoading(false);
+                return null;
+              }
+              return confirmPasswordResetAction({
+                data: {
+                  email,
+                  resetProofToken: verify.resetProofToken,
+                  newPassword: password,
+                },
+              });
+            })
             .then((result) => {
-              if (!result.success) {
+              if (!result) return;
+              if (result.status !== "ok") {
                 setError(result.message ?? "Could not reset password.");
                 setLoading(false);
                 return;

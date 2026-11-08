@@ -15,6 +15,11 @@ interface OtpStepProps {
   error?: string | null;
   /** Toast-style hint (e.g. "Code re-sent. Check your inbox."). */
   notice?: string | null;
+  eyebrow?: string;
+  title?: string;
+  submitLabel?: string;
+  submitLoadingLabel?: string;
+  otpAriaLabel?: string;
 }
 
 const CODE_LENGTH = 6;
@@ -34,6 +39,11 @@ export function OtpStep({
   onResend,
   error,
   notice,
+  eyebrow = "Verify email",
+  title = "Confirm it's you",
+  submitLabel = "Verify & create account",
+  submitLoadingLabel = "Creating your vault…",
+  otpAriaLabel = "Email verification code",
 }: OtpStepProps) {
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -84,8 +94,8 @@ export function OtpStep({
       </button>
 
       <Title
-        eyebrow="Verify email"
-        title="Confirm it's you"
+        eyebrow={eyebrow}
+        title={title}
         sub={
           <>
             We emailed a {CODE_LENGTH}-digit code to{" "}
@@ -119,7 +129,7 @@ export function OtpStep({
           value={code}
           onChange={setCode}
           disabled={submitting}
-          ariaLabel="Email verification code"
+          ariaLabel={otpAriaLabel}
         />
 
         <div className="flex items-center justify-between text-[12px] text-muted-foreground">
@@ -141,10 +151,10 @@ export function OtpStep({
 
         <PrimaryButton type="submit" loading={submitting} disabled={!filled}>
           {submitting ? (
-            "Creating your vault…"
+            submitLoadingLabel
           ) : (
             <>
-              <Check className="h-4 w-4" /> Verify &amp; create account
+              <Check className="h-4 w-4" /> {submitLabel}
             </>
           )}
         </PrimaryButton>

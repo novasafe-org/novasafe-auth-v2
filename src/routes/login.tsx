@@ -5,6 +5,7 @@ import { z } from "zod";
 import { rejectAuthenticatedVisitors } from "@/lib/auth/guest-guard";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { LoginCard } from "@/components/auth/screens/LoginCard";
+import { ForgotPasswordCard } from "@/components/auth/screens/ForgotPasswordCard";
 import { TwoFactorCard } from "@/components/auth/screens/TwoFactorCard";
 import { buildSignupUrl } from "@/config";
 
@@ -37,17 +38,28 @@ export const Route = createFileRoute("/login")({
   component: LoginRoute,
 });
 
-type Stage = { kind: "login" } | { kind: "two-factor"; email: string; message: string };
+type Stage =
+  | { kind: "login" }
+  | { kind: "forgot"; initialEmail?: string }
+  | { kind: "two-factor"; email: string; message: string };
 
 function LoginRoute() {
   const { next } = Route.useSearch();
   const [stage, setStage] = useState<Stage>({ kind: "login" });
+  const [loginNotice, setLoginNotice] = useState<string | null>(null);
 
-  const kicker = stage.kind === "login" ? "Welcome back" : "Two-factor";
+  const kicker =
+    stage.kind === "login"
+      ? "Welcome back"
+      : stage.kind === "forgot"
+        ? "Account recovery"
+        : "Two-factor";
   const headline =
     stage.kind === "login"
       ? "The vault that disappears when you don't need it."
-      : "A second factor that takes one second.";
+      : stage.kind === "forgot"
+        ? "Recovery, the way it should be — private and effortless."
+        : "A second factor that takes one second.";
 
   return (
     <AuthShell
@@ -68,7 +80,22 @@ function LoginRoute() {
       {stage.kind === "login" ? (
         <LoginCard
           next={next}
+          loginNotice={loginNotice}
+          onClearNotice={() => setLoginNotice(null)}
+          onForgotPassword={(initialEmail) => setStage({ kind: "forgot", initialEmail })}
           onTwoFactorRequired={(email, message) => setStage({ kind: "two-factor", email, message })}
+        />
+      ) : stage.kind === "forgot" ? (
+        <ForgotPasswordCard
+          initialEmail={stage.initialEmail}
+          onBackToLogin={() => {
+            setLoginNotice(null);
+            setStage({ kind: "login" });
+          }}
+          onComplete={(message) => {
+            setLoginNotice(message);
+            setStage({ kind: "login" });
+          }}
         />
       ) : (
         <TwoFactorCard email={stage.email} next={next} onBack={() => setStage({ kind: "login" })} />

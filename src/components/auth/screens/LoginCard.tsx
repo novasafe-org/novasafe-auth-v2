@@ -20,11 +20,22 @@ import {
 interface LoginCardProps {
   /** Optional `next` URL forwarded from the landing CTAs (open-redirect-safe). */
   next?: string;
+  /** Shown after a successful password reset (non-error). */
+  loginNotice?: string | null;
+  onClearNotice?: () => void;
   /** Called when the backend reports `requiresTwoFactor`. */
   onTwoFactorRequired: (email: string, message: string) => void;
+  /** Opens the forgot-password flow (same shell, different step). */
+  onForgotPassword?: (email: string) => void;
 }
 
-export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
+export function LoginCard({
+  next,
+  loginNotice,
+  onClearNotice,
+  onTwoFactorRequired,
+  onForgotPassword,
+}: LoginCardProps) {
   const ssoEnabled = useFeatureFlag("sso");
   const enterpriseEnabled = useFeatureFlag("enterprise");
   const showEnterpriseSignIn = ssoEnabled || enterpriseEnabled;
@@ -150,6 +161,20 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
       <Divider label="or" />
 
       <form onSubmit={submit} className="space-y-4" noValidate>
+        {loginNotice && !error && (
+          <div className="rounded-xl border border-primary/30 bg-primary-soft/40 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-foreground flex items-start justify-between gap-3">
+            <span>{loginNotice}</span>
+            {onClearNotice && (
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground text-[11px] shrink-0"
+                onClick={onClearNotice}
+              >
+                Dismiss
+              </button>
+            )}
+          </div>
+        )}
         {error && <ErrorBanner message={error} />}
 
         <Field label="Email">
@@ -169,7 +194,10 @@ export function LoginCard({ next, onTwoFactorRequired }: LoginCardProps) {
             <button
               type="button"
               className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setError("Password recovery isn't wired yet.")}
+              onClick={() => {
+                setError(null);
+                onForgotPassword?.(email.trim());
+              }}
             >
               Forgot password?
             </button>
