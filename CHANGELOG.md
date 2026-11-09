@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.14
+
+### Changed
+
+feat(login): forgot password flow, loading states, and recovery UX
+
 ## v1.1.13
 
 ### Changed
