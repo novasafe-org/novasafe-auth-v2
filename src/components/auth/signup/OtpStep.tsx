@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, Check, Mail, RefreshCw } from "lucide-react";
 
 import { OtpInput } from "@/components/auth/OtpInput";
@@ -16,10 +16,14 @@ interface OtpStepProps {
   /** Toast-style hint (e.g. "Code re-sent. Check your inbox."). */
   notice?: string | null;
   eyebrow?: string;
+  /** When false, hides the eyebrow chip (e.g. password reset). */
+  showEyebrow?: boolean;
   title?: string;
   submitLabel?: string;
   submitLoadingLabel?: string;
   otpAriaLabel?: string;
+  /** Overrides default "We emailed a code to …" copy */
+  description?: ReactNode;
 }
 
 const CODE_LENGTH = 6;
@@ -40,10 +44,12 @@ export function OtpStep({
   error,
   notice,
   eyebrow = "Verify email",
+  showEyebrow = true,
   title = "Confirm it's you",
   submitLabel = "Verify & create account",
   submitLoadingLabel = "Creating your vault…",
   otpAriaLabel = "Email verification code",
+  description,
 }: OtpStepProps) {
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -95,13 +101,15 @@ export function OtpStep({
       </button>
 
       <Title
-        eyebrow={eyebrow}
+        eyebrow={showEyebrow ? eyebrow : undefined}
         title={title}
         sub={
-          <>
-            We emailed a {CODE_LENGTH}-digit code to{" "}
-            <span className="text-foreground font-medium">{email}</span>.
-          </>
+          description ?? (
+            <>
+              We emailed a {CODE_LENGTH}-digit code to{" "}
+              <span className="text-foreground font-medium">{email}</span>.
+            </>
+          )
         }
       />
 

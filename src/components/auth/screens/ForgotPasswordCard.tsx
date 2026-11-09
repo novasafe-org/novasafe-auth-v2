@@ -11,6 +11,7 @@ import { ResetPasswordStep } from "@/components/auth/forgot/ResetPasswordStep";
 import { ErrorBanner, Field, Input, PrimaryButton, Section, Title } from "@/components/auth/primitives";
 
 const RESEND_COOLDOWN_SECONDS = 30;
+const OTP_LENGTH = 6;
 
 interface ForgotPasswordCardProps {
   initialEmail?: string;
@@ -20,7 +21,7 @@ interface ForgotPasswordCardProps {
 }
 
 type Stage =
-  | { step: "email"; email: string; error: string | null }
+  | { step: "email"; email: string; error: string | null; sending: boolean }
   | {
       step: "otp";
       email: string;
@@ -45,12 +46,13 @@ export function ForgotPasswordCard({
     step: "email",
     email: initialEmail.trim(),
     error: null,
+    sending: false,
   });
 
   const sendResetCode = useCallback(async (email: string) => {
     const result = await requestPasswordResetAction({ data: { email } });
     if (result.status === "ok") {
-      return { ok: true as const };
+      return { ok: true as const, message: result.message };
     }
     if (result.status === "rate-limited") {
       return {
@@ -64,39 +66,40 @@ export function ForgotPasswordCard({
 
   async function submitEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (stage.step !== "email") return;
+    if (stage.step !== "email" || stage.sending) return;
 
     const trimmed = stage.email.trim().toLowerCase();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setStage({ ...stage, email: trimmed, error: "Enter a valid email address." });
+      setStage({ ...stage, email: trimmed, error: "Enter a valid email address.", sending: false });
       return;
     }
 
-    setStage({ ...stage, email: trimmed, error: null });
+    setStage({ ...stage, email: trimmed, error: null, sending: true });
     const result = await sendResetCode(trimmed);
     if (result.ok) {
       setStage({
         step: "otp",
         email: trimmed,
         otpError: null,
-        otpNotice: "If an account exists for this email, we sent a reset code.",
+        otpNotice:
+          "If an account exists for this email, we sent a reset code. Check your inbox and spam folder.",
         cooldownSeconds: RESEND_COOLDOWN_SECONDS,
       });
       return;
     }
 
-    if ("cooldownSeconds" in result && result.cooldownSeconds) {
-      setStage({
-        step: "otp",
-        email: trimmed,
-        otpError: result.message ?? "Please wait before requesting another code.",
-        otpNotice: null,
-        cooldownSeconds: result.cooldownSeconds,
-      });
-      return;
-    }
+    const message =
+      result.message ??
+      ("cooldownSeconds" in result
+        ? "Please wait before requesting another code."
+        : "We couldn't send a reset code. Try again in a moment.");
 
-    setStage({ step: "email", email: trimmed, error: result.message ?? "Could not send reset code." });
+    setStage({
+      step: "email",
+      email: trimmed,
+      error: message,
+      sending: false,
+    });
   }
 
   const handleVerifyOtp = useCallback(
@@ -115,7 +118,14 @@ export function ForgotPasswordCard({
         });
         return true;
       }
-      setStage({ ...stage, otpError: result.message, otpNotice: null });
+      setStage({
+        ...stage,
+        otpError:
+          result.message === "Invalid or expired reset code"
+            ? "That code didn't work. It may be wrong, expired, or there may be no reset pending for this email."
+            : result.message,
+        otpNotice: null,
+      });
       return false;
     },
     [stage],
@@ -142,7 +152,11 @@ export function ForgotPasswordCard({
       });
       return { ok: false, cooldownSeconds: result.cooldownSeconds, message: result.message };
     }
-    setStage({ ...stage, otpError: result.message ?? "Could not resend code.", otpNotice: null });
+    setStage({
+      ...stage,
+      otpError: result.message ?? "Could not resend code. Try again shortly.",
+      otpNotice: null,
+    });
     return { ok: false, message: result.message };
   }, [stage, sendResetCode]);
 
@@ -176,13 +190,22 @@ export function ForgotPasswordCard({
         <OtpStep
           email={stage.email}
           initialResendSeconds={stage.cooldownSeconds}
-          onBack={() => setStage({ step: "email", email: stage.email, error: null })}
+          onBack={() =>
+            setStage({ step: "email", email: stage.email, error: null, sending: false })
+          }
           onSubmit={handleVerifyOtp}
           onResend={handleResend}
           error={stage.otpError}
           notice={stage.otpNotice}
-          eyebrow="Account recovery"
+          showEyebrow={false}
           title="Enter your reset code"
+          description={
+            <>
+              If an account exists for{" "}
+              <span className="text-foreground font-medium">{stage.email}</span>, look for a{" "}
+              {OTP_LENGTH}-digit code in your inbox (and spam).
+            </>
+          }
           submitLabel="Verify code"
           submitLoadingLabel="Verifying…"
           otpAriaLabel="Password reset code"
@@ -218,14 +241,15 @@ export function ForgotPasswordCard({
       <button
         type="button"
         onClick={onBackToLogin}
-        className="text-[12px] text-muted-foreground hover:text-foreground mb-2 transition-colors"
+        disabled={stage.sending}
+        className="text-[12px] text-muted-foreground hover:text-foreground mb-2 transition-colors cursor-pointer disabled:opacity-60"
       >
         ← Back to sign in
       </button>
 
       <Title
         title="Reset your password"
-        sub="Enter the email for your NovaSafe account. We'll send a one-time code to verify it's you."
+        sub="Enter the email for your NovaSafe account. We'll send a one-time code if an account exists for that address."
       />
 
       <form onSubmit={submitEmail} className="space-y-4" noValidate>
@@ -238,12 +262,21 @@ export function ForgotPasswordCard({
             autoComplete="email"
             placeholder="you@company.com"
             value={stage.email}
-            onChange={(e) => setStage({ ...stage, email: e.target.value, error: null })}
+            disabled={stage.sending}
+            onChange={(e) =>
+              setStage({ ...stage, email: e.target.value, error: null, sending: false })
+            }
           />
         </Field>
 
-        <PrimaryButton type="submit">
-          Send reset code <ArrowRight className="h-4 w-4" />
+        <PrimaryButton type="submit" loading={stage.sending} disabled={stage.sending}>
+          {stage.sending ? (
+            "Sending reset code…"
+          ) : (
+            <>
+              Send reset code <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </PrimaryButton>
       </form>
     </Section>
