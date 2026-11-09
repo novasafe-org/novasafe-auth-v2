@@ -43,17 +43,25 @@ export function Field({
 }: {
   label: string;
   hint?: ReactNode;
+  /** Associates only the label text with an input — avoids making the whole row clickable. */
   htmlFor?: string;
   children: ReactNode;
 }) {
+  const labelClass = "text-[12px] font-medium text-foreground";
   return (
-    <label htmlFor={htmlFor} className="block">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[12px] font-medium text-foreground">{label}</span>
-        {hint && <span className="text-[11px] text-muted-foreground">{hint}</span>}
+    <div className="block">
+      <div className="flex items-center justify-between gap-3 mb-1.5">
+        {htmlFor ? (
+          <label htmlFor={htmlFor} className={labelClass}>
+            {label}
+          </label>
+        ) : (
+          <span className={labelClass}>{label}</span>
+        )}
+        {hint}
       </div>
       {children}
-    </label>
+    </div>
   );
 }
 

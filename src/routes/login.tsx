@@ -65,6 +65,7 @@ function LoginRoute() {
     <AuthShell
       kicker={kicker}
       headline={headline}
+      footer={null}
       topBarAction={
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <span>New to NovaSafe?</span>

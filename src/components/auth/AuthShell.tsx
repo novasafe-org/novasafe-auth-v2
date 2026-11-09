@@ -46,6 +46,7 @@ export function AuthShell({ kicker, headline, children, topBarAction, footer }: 
               <div className="w-full max-w-[520px] py-8 lg:py-10 px-2 lg:px-5">
                 <div className="anim-fade-up">{children}</div>
 
+                {footer !== null && (
                 <div className="mt-8 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
                   {footer ?? (
                     <>
@@ -63,6 +64,7 @@ export function AuthShell({ kicker, headline, children, topBarAction, footer }: 
                     </>
                   )}
                 </div>
+                )}
               </div>
             </div>
           </div>
