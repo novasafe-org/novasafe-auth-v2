@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.13
+
+### Changed
+
+feat(login): forgot password flow and recovery UX polish
+
 ## v1.1.12
 
 ### Changed
