@@ -13,7 +13,7 @@ interface ResetPasswordStepProps {
 }
 
 /**
- * Final forgot-password step — choose and confirm a new master password.
+ * Final forgot-password step — choose and confirm a new password.
  */
 export function ResetPasswordStep({ email, onBack, onSubmit, error, notice }: ResetPasswordStepProps) {
   const [password, setPassword] = useState("");

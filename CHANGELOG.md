@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.12
+
+### Changed
+
+feat(login): end-to-end forgot password flow
+
 ## v1.1.11
 
 ### Changed
