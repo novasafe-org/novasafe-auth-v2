@@ -75,10 +75,11 @@ export function OtpStep({
     setResending(true);
     const result = await onResend();
     setResending(false);
-    if (result.cooldownSeconds && result.cooldownSeconds > 0) {
+    if (result.ok) {
+      setCode("");
+      setResendCountdown(result.cooldownSeconds ?? initialResendSeconds);
+    } else if (result.cooldownSeconds && result.cooldownSeconds > 0) {
       setResendCountdown(result.cooldownSeconds);
-    } else if (result.ok) {
-      setResendCountdown(initialResendSeconds);
     }
   }
 
@@ -141,7 +142,7 @@ export function OtpStep({
               type="button"
               onClick={resend}
               disabled={resending}
-              className="text-foreground hover:text-primary inline-flex items-center gap-1 transition-colors disabled:opacity-60"
+              className="text-foreground hover:text-primary inline-flex items-center gap-1 transition-colors disabled:opacity-60 cursor-pointer"
             >
               <RefreshCw className={`h-3 w-3 ${resending ? "animate-spin" : ""}`} />
               {resending ? "Sending…" : "Resend code"}

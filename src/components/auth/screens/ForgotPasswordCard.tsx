@@ -111,7 +111,7 @@ export function ForgotPasswordCard({
           email: stage.email,
           resetProofToken: result.resetProofToken,
           passwordError: null,
-          passwordNotice: "Code verified. Choose your new master password.",
+          passwordNotice: "Code verified. Choose your new password.",
         });
         return true;
       }

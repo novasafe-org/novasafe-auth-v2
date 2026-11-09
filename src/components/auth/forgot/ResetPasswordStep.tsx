@@ -1,12 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 import { ErrorBanner, Field, Input, PrimaryButton, Title } from "@/components/auth/primitives";
 import { scorePassword } from "@/components/auth/signup/passwordStrength";
@@ -55,8 +48,7 @@ export function ResetPasswordStep({ email, onBack, onSubmit, error, notice }: Re
       </button>
 
       <Title
-        eyebrow="New password"
-        title="Choose a new master password"
+        title="Choose a new password"
         sub={
           <>
             Updating access for{" "}
@@ -154,11 +146,6 @@ export function ResetPasswordStep({ email, onBack, onSubmit, error, notice }: Re
           That password appears in known data breaches. Please pick something unique.
         </div>
       )}
-
-      <div className="rounded-xl border border-border bg-secondary p-3 text-[12px] text-muted-foreground inline-flex items-start gap-2">
-        <ShieldCheck className="h-4 w-4 text-success mt-0.5 shrink-0" />
-        Your new password is hashed on our servers — we never store it in plain text.
-      </div>
 
       <PrimaryButton type="submit" loading={submitting} disabled={blocked}>
         {submitting ? (

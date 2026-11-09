@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Building2, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
+import { ArrowRight, Building2, Eye, EyeOff, KeyRound, Lock, X } from "lucide-react";
 
 import { messageForGoogleOtpRequired } from "@/lib/auth/google-login-messages";
 import { loginAction, googleLoginAction, type LoginResult } from "@/lib/auth";
@@ -167,10 +167,11 @@ export function LoginCard({
             {onClearNotice && (
               <button
                 type="button"
-                className="text-muted-foreground hover:text-foreground text-[11px] shrink-0"
+                className="text-muted-foreground hover:text-foreground shrink-0 p-0.5 cursor-pointer"
                 onClick={onClearNotice}
+                aria-label="Dismiss message"
               >
-                Dismiss
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -189,11 +190,11 @@ export function LoginCard({
         </Field>
 
         <Field
-          label="Master password"
+          label="Password"
           hint={
             <button
               type="button"
-              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               onClick={() => {
                 setError(null);
                 onForgotPassword?.(email.trim());
@@ -205,6 +206,7 @@ export function LoginCard({
         >
           <div className="relative">
             <Input
+              id="login-password"
               type={show ? "text" : "password"}
               required
               autoComplete="current-password"
